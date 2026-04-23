@@ -1,0 +1,35 @@
+{
+  "manifest_version": 2,
+  "name": "Linux Passkey Manager",
+  "version": "1.0.0",
+  "description": "A local Passkey addon for linux",
+  "author": "TinyBrickBoy",
+  "permissions": [
+    "storage",
+    "<all_urls>"
+  ],
+  "background": {
+    "scripts": ["background.js"]
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content-script.js"],
+      "run_at": "document_start",
+      "all_frames": true
+    }
+  ],
+  "browser_action": {
+    "default_popup": "popup/popup.html",
+    "default_title": "Passkey Manager",
+    "default_icon": {
+      "48": "icons/icon-48.png",
+      "96": "icons/icon-96.png"
+    }
+  },
+  "web_accessible_resources": ["injected.js"],
+  "icons": {
+    "48": "icons/icon-48.png",
+    "96": "icons/icon-96.png"
+  }
+}

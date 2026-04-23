@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Passkey Manager</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="header">
+    <div class="header-text">
+      <h1>Passkey Manager</h1>
+      <p>Gespeicherte Passkeys</p>
+    </div>
+  </div>
+
+  <div id="loading" class="state">
+    <div class="spinner"></div>
+  </div>
+
+  <div id="empty" class="state hidden">
+    <div class="state-title">Keine Passkeys</div>
+    <div class="state-hint">Melde dich auf einer Website mit Passkey an, um einen zu erstellen.</div>
+  </div>
+
+  <ul id="list" class="hidden"></ul>
+
+  <div id="dialog" class="dialog-backdrop hidden">
+    <div class="dialog">
+      <h2>Passkey löschen?</h2>
+      <p id="dialog-msg"></p>
+      <div class="dialog-actions">
+        <button id="btn-cancel" class="btn btn-secondary">Abbrechen</button>
+        <button id="btn-confirm" class="btn btn-danger">Löschen</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
