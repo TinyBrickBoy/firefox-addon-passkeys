@@ -32,8 +32,14 @@
     "48": "icons/icon-48.png",
     "96": "icons/icon-96.png"
   },
-  "data_collection_permissions": {
-    "required": [],
-    "optional": []
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "linux-passkey-manager@tinybrickboy",
+      "strict_min_version": "109.0",
+      "data_collection_permissions": {
+        "required": [],
+        "optional": []
+      }
+    }
   }
 }

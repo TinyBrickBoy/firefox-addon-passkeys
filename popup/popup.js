@@ -31,16 +31,36 @@ function render(passkeys) {
 
     const li = document.createElement('li');
     li.className = 'item';
-    li.innerHTML = `
-      <div class="item-body">
-        <div class="item-site" title="${pk.rpId}">${name}</div>
-        <div class="item-user">${user}</div>
-        ${meta ? `<div class="item-meta">${meta}</div>` : ''}
-      </div>
-      <button class="btn-del" title="Löschen" data-id="${pk.credentialId}">✕</button>
-    `;
+    const body = document.createElement('div');
+    body.className = 'item-body';
 
-    li.querySelector('.btn-del').onclick = () => {
+    const siteEl = document.createElement('div');
+    siteEl.className = 'item-site';
+    siteEl.title = pk.rpId;
+    siteEl.textContent = name;
+    body.appendChild(siteEl);
+
+    const userEl = document.createElement('div');
+    userEl.className = 'item-user';
+    userEl.textContent = user;
+    body.appendChild(userEl);
+
+    if (meta) {
+      const metaEl = document.createElement('div');
+      metaEl.className = 'item-meta';
+      metaEl.textContent = meta;
+      body.appendChild(metaEl);
+    }
+
+    const delBtn = document.createElement('button');
+    delBtn.className = 'btn-del';
+    delBtn.title = 'Löschen';
+    delBtn.textContent = '✕';
+
+    li.appendChild(body);
+    li.appendChild(delBtn);
+
+    delBtn.onclick = () => {
       pendingId = pk.credentialId;
       dialogMsg.textContent = `Passkey für „${name}" (${user}) wird unwiderruflich gelöscht.`;
       dialogEl.classList.remove('hidden');
