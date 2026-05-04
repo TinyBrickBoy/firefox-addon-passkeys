@@ -12,6 +12,12 @@
       <h1>Passkey Manager</h1>
       <p>Gespeicherte Passkeys</p>
     </div>
+    <button id="btn-settings" class="btn-icon" title="Einstellungen" aria-label="Einstellungen">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="3"></circle>
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+      </svg>
+    </button>
   </div>
 
   <div id="loading" class="state">
@@ -24,6 +30,52 @@
   </div>
 
   <ul id="list" class="hidden"></ul>
+
+  <div id="settings" class="settings hidden">
+    <div class="settings-header">
+      <button id="btn-back" class="btn-icon" title="Zurück" aria-label="Zurück">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M19 12H5"></path>
+          <path d="M12 19l-7-7 7-7"></path>
+        </svg>
+      </button>
+      <div class="settings-title">Nextcloud Sync</div>
+    </div>
+
+    <form id="settings-form" class="settings-form" autocomplete="off">
+      <label class="field">
+        <span>Server-URL</span>
+        <input id="nc-url" type="url" placeholder="https://cloud.example.com" required>
+      </label>
+      <label class="field">
+        <span>Benutzername</span>
+        <input id="nc-user" type="text" placeholder="benutzer" required>
+      </label>
+      <label class="field">
+        <span>App-Passwort</span>
+        <input id="nc-pass" type="password" placeholder="••••••••" required>
+      </label>
+      <label class="field">
+        <span>Pfad auf Nextcloud</span>
+        <input id="nc-path" type="text" placeholder="passkeys.json" value="passkeys.json">
+      </label>
+      <label class="field">
+        <span>Verschlüsselungs-Passphrase (empfohlen)</span>
+        <input id="nc-phrase" type="password" placeholder="leer = unverschlüsselt">
+      </label>
+
+      <div class="settings-actions">
+        <button id="btn-save" type="submit" class="btn btn-secondary">Speichern</button>
+      </div>
+
+      <div class="sync-actions">
+        <button id="btn-export" type="button" class="btn btn-primary">Exportieren</button>
+        <button id="btn-import" type="button" class="btn btn-secondary">Importieren</button>
+      </div>
+
+      <p id="sync-status" class="sync-status"></p>
+    </form>
+  </div>
 
   <div id="dialog" class="dialog-backdrop hidden">
     <div class="dialog">

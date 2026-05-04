@@ -449,4 +449,173 @@ browser.runtime.onMessage.addListener(function (msg, sender) {
   if (msg.action === 'delete-passkey') {
     return deletePasskey(msg.credentialId).then(() => ({ success: true }));
   }
+
+  if (msg.action === 'nextcloud-get-config') {
+    return browser.storage.local.get('nextcloud').then(r => ({ config: r.nextcloud || null }));
+  }
+
+  if (msg.action === 'nextcloud-set-config') {
+    return browser.storage.local.set({ nextcloud: msg.config }).then(() => ({ success: true }));
+  }
+
+  if (msg.action === 'nextcloud-export') {
+    return nextcloudExport()
+      .then(info => ({ success: true, ...info }))
+      .catch(err => ({ error: { name: err.name || 'Error', message: err.message } }));
+  }
+
+  if (msg.action === 'nextcloud-import') {
+    return nextcloudImport(msg.mode || 'merge')
+      .then(info => ({ success: true, ...info }))
+      .catch(err => ({ error: { name: err.name || 'Error', message: err.message } }));
+  }
 });
+
+// ─── Nextcloud Sync (WebDAV) ─────────────────────────────────────────────────
+
+function buildWebdavUrl(cfg) {
+  const base = cfg.url.replace(/\/+$/, '');
+  const user = encodeURIComponent(cfg.username);
+  const path = (cfg.path || 'passkeys.json').replace(/^\/+/, '');
+  return `${base}/remote.php/dav/files/${user}/${path}`;
+}
+
+function basicAuthHeader(cfg) {
+  const raw = `${cfg.username}:${cfg.password}`;
+  // btoa erwartet Latin-1; UTF-8 sicher kodieren
+  const bytes = new TextEncoder().encode(raw);
+  let bin = '';
+  for (const b of bytes) bin += String.fromCharCode(b);
+  return 'Basic ' + btoa(bin);
+}
+
+async function loadNextcloudConfig() {
+  const r = await browser.storage.local.get('nextcloud');
+  if (!r.nextcloud || !r.nextcloud.url || !r.nextcloud.username || !r.nextcloud.password) {
+    throw new Error('Nextcloud-Zugang ist nicht vollständig konfiguriert.');
+  }
+  return r.nextcloud;
+}
+
+async function deriveKey(passphrase, salt) {
+  const baseKey = await crypto.subtle.importKey(
+    'raw',
+    new TextEncoder().encode(passphrase),
+    'PBKDF2',
+    false,
+    ['deriveKey']
+  );
+  return crypto.subtle.deriveKey(
+    { name: 'PBKDF2', salt, iterations: 200000, hash: 'SHA-256' },
+    baseKey,
+    { name: 'AES-GCM', length: 256 },
+    false,
+    ['encrypt', 'decrypt']
+  );
+}
+
+async function encryptPayload(plaintextStr, passphrase) {
+  const salt = randomBytes(16);
+  const iv = randomBytes(12);
+  const key = await deriveKey(passphrase, salt);
+  const ct = new Uint8Array(await crypto.subtle.encrypt(
+    { name: 'AES-GCM', iv },
+    key,
+    new TextEncoder().encode(plaintextStr)
+  ));
+  return JSON.stringify({
+    v: 1,
+    enc: 'AES-GCM-PBKDF2',
+    iter: 200000,
+    salt: base64urlEncode(Array.from(salt)),
+    iv: base64urlEncode(Array.from(iv)),
+    ct: base64urlEncode(Array.from(ct)),
+  });
+}
+
+async function decryptPayload(envelopeStr, passphrase) {
+  const env = JSON.parse(envelopeStr);
+  if (env && env.enc === 'AES-GCM-PBKDF2') {
+    const salt = base64urlDecode(env.salt);
+    const iv = base64urlDecode(env.iv);
+    const ct = base64urlDecode(env.ct);
+    const key = await deriveKey(passphrase, salt);
+    const pt = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, key, ct);
+    return new TextDecoder().decode(pt);
+  }
+  // Unverschlüsselt erlaubt
+  return envelopeStr;
+}
+
+async function nextcloudExport() {
+  const cfg = await loadNextcloudConfig();
+  const passkeys = await loadPasskeys();
+  const payload = {
+    type: 'linux-passkey-manager-backup',
+    version: 1,
+    exported: new Date().toISOString(),
+    passkeys,
+  };
+  let body = JSON.stringify(payload);
+  let contentType = 'application/json';
+  if (cfg.passphrase) {
+    body = await encryptPayload(body, cfg.passphrase);
+    contentType = 'application/json';
+  }
+  const url = buildWebdavUrl(cfg);
+  const res = await fetch(url, {
+    method: 'PUT',
+    headers: { 'Authorization': basicAuthHeader(cfg), 'Content-Type': contentType },
+    body,
+  });
+  if (!res.ok) {
+    throw new Error(`Upload fehlgeschlagen (${res.status} ${res.statusText})`);
+  }
+  return { count: passkeys.length, encrypted: !!cfg.passphrase };
+}
+
+async function nextcloudImport(mode) {
+  const cfg = await loadNextcloudConfig();
+  const url = buildWebdavUrl(cfg);
+  const res = await fetch(url, {
+    method: 'GET',
+    headers: { 'Authorization': basicAuthHeader(cfg) },
+  });
+  if (res.status === 404) throw new Error('Datei auf Nextcloud nicht gefunden.');
+  if (!res.ok) throw new Error(`Download fehlgeschlagen (${res.status} ${res.statusText})`);
+  const text = await res.text();
+
+  let plaintext;
+  try {
+    plaintext = await decryptPayload(text, cfg.passphrase || '');
+  } catch (e) {
+    throw new Error('Entschlüsselung fehlgeschlagen – Passphrase prüfen.');
+  }
+
+  let payload;
+  try {
+    payload = JSON.parse(plaintext);
+  } catch (e) {
+    throw new Error('Ungültiges Backup-Format.');
+  }
+  const incoming = Array.isArray(payload) ? payload : payload.passkeys;
+  if (!Array.isArray(incoming)) throw new Error('Backup enthält keine Passkeys.');
+
+  let existing = await loadPasskeys();
+  let added = 0;
+  if (mode === 'replace') {
+    existing = incoming;
+    added = incoming.length;
+  } else {
+    const known = new Set(existing.map(p => p.credentialId));
+    for (const pk of incoming) {
+      if (!known.has(pk.credentialId)) {
+        existing.push(pk);
+        known.add(pk.credentialId);
+        added++;
+      }
+    }
+  }
+  await browser.storage.local.set({ passkeys: existing });
+  return { total: incoming.length, added, mode };
+}

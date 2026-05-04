@@ -55,8 +55,18 @@ body {
   border-bottom: 1px solid var(--border);
 }
 
+.header-text { flex: 1; min-width: 0; }
 .header-text h1 { font-size: 14px; font-weight: 700; color: var(--text); }
 .header-text p  { font-size: 11px; color: var(--muted); margin-top: 1px; }
+
+.btn-icon {
+  background: none; border: none; cursor: pointer;
+  width: 30px; height: 30px; border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--muted); flex-shrink: 0;
+  transition: background 0.12s, color 0.12s;
+}
+.btn-icon:hover { background: var(--bg-icon); color: var(--text); }
 
 /* ── States ── */
 .state {
@@ -146,3 +156,63 @@ ul::-webkit-scrollbar-thumb { background: var(--dim); border-radius: 2px; }
 .btn:hover { opacity: 0.8; }
 .btn-secondary { background: var(--btn-sec-bg); color: var(--btn-sec-fg); }
 .btn-danger    { background: var(--danger-bg);  color: #fff; }
+.btn-primary   { background: var(--text);       color: var(--bg); }
+.btn:disabled  { opacity: 0.5; cursor: not-allowed; }
+
+/* ── Settings ── */
+.settings {
+  position: absolute; inset: 0;
+  background: var(--bg);
+  display: flex; flex-direction: column;
+  z-index: 5;
+}
+
+.settings-header {
+  display: flex; align-items: center; gap: 8px;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--border);
+}
+.settings-title { font-size: 14px; font-weight: 700; color: var(--text); }
+
+.settings-form {
+  padding: 14px 16px 18px;
+  display: flex; flex-direction: column; gap: 12px;
+  overflow-y: auto;
+}
+
+.field { display: flex; flex-direction: column; gap: 4px; }
+.field span {
+  font-size: 11px; font-weight: 600; color: var(--muted);
+  text-transform: uppercase; letter-spacing: 0.04em;
+}
+.field input {
+  height: 32px; padding: 0 10px;
+  border: 1px solid var(--border);
+  background: var(--bg-sub);
+  color: var(--text);
+  border-radius: 8px;
+  font-size: 13px;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.12s;
+}
+.field input:focus { border-color: var(--btn-sec-fg); }
+
+.settings-actions { display: flex; justify-content: flex-end; }
+.sync-actions {
+  display: flex; gap: 8px;
+  padding-top: 10px; border-top: 1px solid var(--border);
+}
+.sync-actions .btn { flex: 1; }
+
+.sync-status {
+  font-size: 12px; color: var(--muted); min-height: 16px;
+  text-align: center; line-height: 1.4;
+}
+.sync-status.ok    { color: #2e7d32; }
+.sync-status.err   { color: var(--del-hover-fg); }
+@media (prefers-color-scheme: dark) {
+  .sync-status.ok  { color: #66bb6a; }
+}
+
+body { position: relative; }
