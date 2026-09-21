@@ -1,5 +1,7 @@
 // Background-Script: Krypto-Operationen und Passkey-Speicherung
 
+const t = (key, ...subs) => browser.i18n.getMessage(key, subs.map(String));
+
 // ─── CBOR Minimal-Encoder ────────────────────────────────────────────────────
 
 function cborEncodeInt(value) {
@@ -210,7 +212,7 @@ async function handleCreate(options, origin, hostname) {
   // Sicherheit: rpId muss zur aktuellen Domain gehören
   if (rpId !== hostname && !hostname.endsWith('.' + rpId)) {
     throw new DOMException(
-      `rpId "${rpId}" ist nicht gültig für Origin "${hostname}"`,
+      t('errorInvalidRpId', rpId, hostname),
       'SecurityError'
     );
   }
@@ -315,9 +317,9 @@ async function handleGet(options, origin, hostname) {
   }
 
   if (candidates.length === 0) {
-    const stored = passkeys.map(p => p.rpId).join(', ') || '(keine)';
+    const stored = passkeys.map(p => p.rpId).join(', ') || t('listNone');
     throw new DOMException(
-      `Kein Passkey für "${rpId}" – gespeichert: [${stored}]. Bitte erst Passkey erstellen.`,
+      t('errorNoPasskeyFound', rpId, stored),
       'NotAllowedError'
     );
   }
@@ -330,7 +332,7 @@ async function handleGet(options, origin, hostname) {
       return base64urlEncode(Array.from(id));
     });
     const match = candidates.find(pk => allowed.includes(pk.credentialId));
-    if (!match) throw new DOMException('Keiner der erlaubten Passkeys gefunden', 'NotAllowedError');
+    if (!match) throw new DOMException(t('errorNoAllowedPasskey'), 'NotAllowedError');
     passkey = match;
   }
 

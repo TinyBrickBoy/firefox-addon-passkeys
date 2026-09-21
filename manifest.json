@@ -1,9 +1,10 @@
 {
   "manifest_version": 2,
-  "name": "Linux Passkey Manager",
+  "name": "__MSG_extensionName__",
   "version": "1.0.0",
-  "description": "A local Passkey addon for linux",
+  "description": "__MSG_extensionDescription__",
   "author": "TinyBrickBoy",
+  "default_locale": "en",
   "permissions": [
     "storage",
     "<all_urls>"
@@ -21,7 +22,7 @@
   ],
   "browser_action": {
     "default_popup": "popup/popup.html",
-    "default_title": "Passkey Manager",
+    "default_title": "__MSG_actionTitle__",
     "default_icon": {
       "48": "icons/icon-48.png",
       "96": "icons/icon-96.png"
