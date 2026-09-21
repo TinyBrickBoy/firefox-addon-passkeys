@@ -1,0 +1,155 @@
+{
+  "extensionName": {
+    "message": "Linux Passkey Manager",
+    "description": "Name of the extension."
+  },
+  "extensionDescription": {
+    "message": "A local passkey addon for Linux",
+    "description": "Description of the extension shown in the addon manager."
+  },
+  "actionTitle": {
+    "message": "Passkey Manager",
+    "description": "Tooltip of the toolbar button."
+  },
+
+  "popupTitle": {
+    "message": "Passkey Manager",
+    "description": "Heading in the popup."
+  },
+  "popupSubtitle": {
+    "message": "Saved passkeys",
+    "description": "Subheading in the popup."
+  },
+  "popupEmptyTitle": {
+    "message": "No passkeys",
+    "description": "Title shown when no passkey is stored."
+  },
+  "popupEmptyHint": {
+    "message": "Sign in to a website with a passkey to create one.",
+    "description": "Hint shown when no passkey is stored."
+  },
+  "popupUnknownUser": {
+    "message": "–",
+    "description": "Placeholder when a passkey has no user name."
+  },
+  "popupUsageCount": {
+    "message": "used $COUNT$×",
+    "description": "How often a passkey has been used.",
+    "placeholders": {
+      "count": { "content": "$1", "example": "3" }
+    }
+  },
+  "popupDeleteTooltip": {
+    "message": "Delete",
+    "description": "Tooltip of the delete button in the passkey list."
+  },
+  "popupDeleteTitle": {
+    "message": "Delete passkey?",
+    "description": "Title of the delete confirmation dialog."
+  },
+  "popupDeleteMessage": {
+    "message": "The passkey for “$SITE$” ($USER$) will be deleted permanently.",
+    "description": "Body of the delete confirmation dialog.",
+    "placeholders": {
+      "site": { "content": "$1", "example": "example.com" },
+      "user": { "content": "$2", "example": "jane@example.com" }
+    }
+  },
+
+  "buttonCancel": {
+    "message": "Cancel",
+    "description": "Label of the cancel button."
+  },
+  "buttonDelete": {
+    "message": "Delete",
+    "description": "Label of the delete button."
+  },
+  "buttonCreate": {
+    "message": "Create",
+    "description": "Label of the button confirming passkey creation."
+  },
+  "buttonSignIn": {
+    "message": "Sign in",
+    "description": "Label of the button confirming a passkey login."
+  },
+  "buttonOk": {
+    "message": "OK",
+    "description": "Label of the button closing the error dialog."
+  },
+
+  "modalCreateTitle": {
+    "message": "Create passkey",
+    "description": "Title of the passkey creation prompt."
+  },
+  "modalCreateMessage": {
+    "message": "$SITE$ wants to create a passkey.",
+    "description": "Body of the passkey creation prompt without a user name.",
+    "placeholders": {
+      "site": { "content": "$1", "example": "example.com" }
+    }
+  },
+  "modalCreateMessageUser": {
+    "message": "$SITE$ wants to create a passkey for $USER$.",
+    "description": "Body of the passkey creation prompt with a user name.",
+    "placeholders": {
+      "site": { "content": "$1", "example": "example.com" },
+      "user": { "content": "$2", "example": "jane@example.com" }
+    }
+  },
+  "modalGetTitle": {
+    "message": "Sign in with passkey",
+    "description": "Title of the passkey login prompt."
+  },
+  "modalGetMessage": {
+    "message": "$SITE$ wants to use your passkey.",
+    "description": "Body of the passkey login prompt.",
+    "placeholders": {
+      "site": { "content": "$1", "example": "example.com" }
+    }
+  },
+  "modalErrorTitle": {
+    "message": "Error",
+    "description": "Title of the error dialog."
+  },
+
+  "errorCancelled": {
+    "message": "Cancelled",
+    "description": "Error message when the user dismisses the prompt."
+  },
+  "errorUnknown": {
+    "message": "Unknown error",
+    "description": "Fallback error message."
+  },
+  "errorTimeout": {
+    "message": "Timed out",
+    "description": "Error message when a WebAuthn request times out."
+  },
+  "errorPasskey": {
+    "message": "Passkey error",
+    "description": "Fallback error message for a failed WebAuthn request."
+  },
+  "errorInvalidRpId": {
+    "message": "rpId “$RPID$” is not valid for origin “$ORIGIN$”",
+    "description": "Error when a site asks for a passkey of another domain.",
+    "placeholders": {
+      "rpid": { "content": "$1", "example": "example.com" },
+      "origin": { "content": "$2", "example": "www.example.com" }
+    }
+  },
+  "errorNoPasskeyFound": {
+    "message": "No passkey for “$RPID$” – stored: [$STORED$]. Please create a passkey first.",
+    "description": "Error when no passkey matches the requesting site.",
+    "placeholders": {
+      "rpid": { "content": "$1", "example": "example.com" },
+      "stored": { "content": "$2", "example": "example.org, example.net" }
+    }
+  },
+  "errorNoAllowedPasskey": {
+    "message": "None of the allowed passkeys were found",
+    "description": "Error when no stored passkey is in allowCredentials."
+  },
+  "listNone": {
+    "message": "(none)",
+    "description": "Placeholder for an empty list of stored passkeys."
+  }
+}

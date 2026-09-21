@@ -1,4 +1,11 @@
 const $ = id => document.getElementById(id);
+const t = (key, ...subs) => browser.i18n.getMessage(key, subs.map(String));
+
+// Statische Texte aus popup.html übersetzen
+document.documentElement.lang = browser.i18n.getUILanguage();
+document.querySelectorAll('[data-i18n]').forEach(node => {
+  node.textContent = t(node.dataset.i18n);
+});
 
 const loadingEl = $('loading');
 const emptyEl   = $('empty');
@@ -10,7 +17,7 @@ let pendingId = null;
 
 function fmt(iso) {
   if (!iso) return '';
-  return new Date(iso).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  return new Date(iso).toLocaleDateString(browser.i18n.getUILanguage(), { day: '2-digit', month: '2-digit', year: 'numeric' });
 }
 
 function render(passkeys) {
@@ -25,9 +32,9 @@ function render(passkeys) {
   listEl.innerHTML = '';
 
   passkeys.forEach(pk => {
-    const user = pk.userDisplayName || pk.userName || '–';
+    const user = pk.userDisplayName || pk.userName || t('popupUnknownUser');
     const name = pk.rpName || pk.rpId;
-    const meta = [fmt(pk.created), pk.counter ? `${pk.counter}× genutzt` : ''].filter(Boolean).join(' · ');
+    const meta = [fmt(pk.created), pk.counter ? t('popupUsageCount', pk.counter) : ''].filter(Boolean).join(' · ');
 
     const li = document.createElement('li');
     li.className = 'item';
@@ -54,7 +61,7 @@ function render(passkeys) {
 
     const delBtn = document.createElement('button');
     delBtn.className = 'btn-del';
-    delBtn.title = 'Löschen';
+    delBtn.title = t('popupDeleteTooltip');
     delBtn.textContent = '✕';
 
     li.appendChild(body);
@@ -62,7 +69,7 @@ function render(passkeys) {
 
     delBtn.onclick = () => {
       pendingId = pk.credentialId;
-      dialogMsg.textContent = `Passkey für „${name}" (${user}) wird unwiderruflich gelöscht.`;
+      dialogMsg.textContent = t('popupDeleteMessage', name, user);
       dialogEl.classList.remove('hidden');
     };
 

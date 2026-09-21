@@ -1,7 +1,14 @@
 // Content-Script: Injiziert injected.js und zeigt Passkey-UI
 (function () {
+  const t = (key, ...subs) => browser.i18n.getMessage(key, subs.map(String));
+
   const script = document.createElement('script');
   script.src = browser.runtime.getURL('injected.js');
+  // injected.js läuft im Seitenkontext und hat keinen Zugriff auf browser.i18n
+  script.dataset.i18n = JSON.stringify({
+    errorPasskey: t('errorPasskey'),
+    errorTimeout: t('errorTimeout'),
+  });
   script.onload = function () { script.remove(); };
   (document.head || document.documentElement).appendChild(script);
 
@@ -29,7 +36,7 @@
 
       const confirmed = await showModal(type, options);
       if (!confirmed) {
-        respond(id, null, { name: 'NotAllowedError', message: 'Abgebrochen' });
+        respond(id, null, { name: 'NotAllowedError', message: t('errorCancelled') });
         return;
       }
 
@@ -48,7 +55,7 @@
       }
 
       if (result.error) {
-        showError(result.error.message || 'Unbekannter Fehler');
+        showError(result.error.message || t('errorUnknown'));
         respond(id, null, result.error);
       } else {
         respond(id, { ...result, type }, null);
@@ -148,6 +155,25 @@
     return node;
   }
 
+  // Baut eine übersetzte Nachricht auf, deren Platzhalter eigene Elemente werden.
+  // Die Platzhalter werden als Marker angefordert, damit jede Sprache ihre eigene
+  // Wortstellung behalten kann.
+  function fillMessage(parent, key, values) {
+    const text = t(key, ...values.map((_, i) => '\u0000' + i + '\u0000'));
+
+    text.split(/\u0000(\d+)\u0000/).forEach((part, index) => {
+      if (!part) return;
+      if (index % 2 === 0) {
+        parent.appendChild(document.createTextNode(part));
+        return;
+      }
+      const value = values[Number(part)];
+      const node = el(value.tag);
+      node.textContent = value.text;
+      parent.appendChild(node);
+    });
+  }
+
   function buildCard(shadow) {
     const backdrop = el('div', 'backdrop');
     const card = el('div', 'card');
@@ -173,34 +199,29 @@
 
       // Title
       const title = el('div', 'title');
-      title.textContent = isCreate ? 'Passkey erstellen' : 'Mit Passkey anmelden';
+      title.textContent = t(isCreate ? 'modalCreateTitle' : 'modalGetTitle');
       card.appendChild(title);
 
-      // Beschreibung mit <strong> und optional <em>
+      // Beschreibung mit <strong> für die Website und optional <em> für den Nutzernamen
       const desc = el('div', 'desc');
-      const strong = el('strong');
-      strong.textContent = rpName;
-      desc.appendChild(strong);
-      if (isCreate) {
-        desc.appendChild(document.createTextNode(' möchte einen Passkey erstellen'));
-        if (userName) {
-          desc.appendChild(document.createTextNode(' für '));
-          const em = el('em');
-          em.textContent = userName;
-          desc.appendChild(em);
-        }
-        desc.appendChild(document.createTextNode('.'));
+      if (!isCreate) {
+        fillMessage(desc, 'modalGetMessage', [{ tag: 'strong', text: rpName }]);
+      } else if (userName) {
+        fillMessage(desc, 'modalCreateMessageUser', [
+          { tag: 'strong', text: rpName },
+          { tag: 'em', text: userName },
+        ]);
       } else {
-        desc.appendChild(document.createTextNode(' möchte deinen Passkey verwenden.'));
+        fillMessage(desc, 'modalCreateMessage', [{ tag: 'strong', text: rpName }]);
       }
       card.appendChild(desc);
 
       // Buttons
       const actions = el('div', 'actions');
       const btnCancel = el('button', 'btn btn-cancel');
-      btnCancel.textContent = 'Abbrechen';
+      btnCancel.textContent = t('buttonCancel');
       const btnConfirm = el('button', 'btn btn-confirm');
-      btnConfirm.textContent = isCreate ? 'Erstellen' : 'Anmelden';
+      btnConfirm.textContent = t(isCreate ? 'buttonCreate' : 'buttonSignIn');
       actions.appendChild(btnCancel);
       actions.appendChild(btnConfirm);
       card.appendChild(actions);
@@ -218,7 +239,7 @@
     const { backdrop, card } = buildCard(shadow);
 
     const title = el('div', 'title error');
-    title.textContent = 'Fehler';
+    title.textContent = t('modalErrorTitle');
     card.appendChild(title);
 
     const desc = el('div', 'desc');
@@ -227,7 +248,7 @@
 
     const actions = el('div', 'actions');
     const btnOk = el('button', 'btn btn-confirm');
-    btnOk.textContent = 'OK';
+    btnOk.textContent = t('buttonOk');
     actions.appendChild(btnOk);
     card.appendChild(actions);
 

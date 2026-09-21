@@ -3,6 +3,17 @@
   if (window.__passkeyAddonInjected) return;
   window.__passkeyAddonInjected = true;
 
+  // Übersetzte Texte, die das Content-Script am <script>-Tag hinterlegt hat –
+  // browser.i18n ist hier nicht verfügbar.
+  const i18n = (function () {
+    try {
+      return JSON.parse(document.currentScript.dataset.i18n);
+    } catch (err) {
+      return {};
+    }
+  })();
+  const t = key => i18n[key] || key;
+
   const originalCreate = navigator.credentials.create.bind(navigator.credentials);
   const originalGet = navigator.credentials.get.bind(navigator.credentials);
 
@@ -39,7 +50,7 @@
       const origOptions = entry.options;
       originalGet(origOptions).then(entry.resolve).catch(entry.reject);
     } else if (msg.error) {
-      entry.reject(new DOMException(msg.error.message || 'Passkey-Fehler', msg.error.name || 'NotAllowedError'));
+      entry.reject(new DOMException(msg.error.message || t('errorPasskey'), msg.error.name || 'NotAllowedError'));
     } else {
       entry.resolve(deserializeCredential(msg.result));
     }
@@ -146,7 +157,7 @@
       setTimeout(function () {
         if (pending.has(id)) {
           pending.delete(id);
-          reject(new DOMException('Zeitüberschreitung', 'TimeoutError'));
+          reject(new DOMException(t('errorTimeout'), 'TimeoutError'));
         }
       }, 300000);
     });
@@ -169,7 +180,7 @@
       setTimeout(function () {
         if (pending.has(id)) {
           pending.delete(id);
-          reject(new DOMException('Zeitüberschreitung', 'TimeoutError'));
+          reject(new DOMException(t('errorTimeout'), 'TimeoutError'));
         }
       }, 300000);
     });

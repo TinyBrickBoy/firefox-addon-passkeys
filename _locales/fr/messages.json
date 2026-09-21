@@ -1,0 +1,155 @@
+{
+  "extensionName": {
+    "message": "Linux Passkey Manager",
+    "description": "Name of the extension."
+  },
+  "extensionDescription": {
+    "message": "Un module de clés d’accès local pour Linux",
+    "description": "Description of the extension shown in the addon manager."
+  },
+  "actionTitle": {
+    "message": "Passkey Manager",
+    "description": "Tooltip of the toolbar button."
+  },
+
+  "popupTitle": {
+    "message": "Passkey Manager",
+    "description": "Heading in the popup."
+  },
+  "popupSubtitle": {
+    "message": "Clés d’accès enregistrées",
+    "description": "Subheading in the popup."
+  },
+  "popupEmptyTitle": {
+    "message": "Aucune clé d’accès",
+    "description": "Title shown when no passkey is stored."
+  },
+  "popupEmptyHint": {
+    "message": "Connectez-vous à un site avec une clé d’accès pour en créer une.",
+    "description": "Hint shown when no passkey is stored."
+  },
+  "popupUnknownUser": {
+    "message": "–",
+    "description": "Placeholder when a passkey has no user name."
+  },
+  "popupUsageCount": {
+    "message": "utilisée $COUNT$×",
+    "description": "How often a passkey has been used.",
+    "placeholders": {
+      "count": { "content": "$1", "example": "3" }
+    }
+  },
+  "popupDeleteTooltip": {
+    "message": "Supprimer",
+    "description": "Tooltip of the delete button in the passkey list."
+  },
+  "popupDeleteTitle": {
+    "message": "Supprimer la clé d’accès ?",
+    "description": "Title of the delete confirmation dialog."
+  },
+  "popupDeleteMessage": {
+    "message": "La clé d’accès pour « $SITE$ » ($USER$) sera définitivement supprimée.",
+    "description": "Body of the delete confirmation dialog.",
+    "placeholders": {
+      "site": { "content": "$1", "example": "example.com" },
+      "user": { "content": "$2", "example": "jane@example.com" }
+    }
+  },
+
+  "buttonCancel": {
+    "message": "Annuler",
+    "description": "Label of the cancel button."
+  },
+  "buttonDelete": {
+    "message": "Supprimer",
+    "description": "Label of the delete button."
+  },
+  "buttonCreate": {
+    "message": "Créer",
+    "description": "Label of the button confirming passkey creation."
+  },
+  "buttonSignIn": {
+    "message": "Se connecter",
+    "description": "Label of the button confirming a passkey login."
+  },
+  "buttonOk": {
+    "message": "OK",
+    "description": "Label of the button closing the error dialog."
+  },
+
+  "modalCreateTitle": {
+    "message": "Créer une clé d’accès",
+    "description": "Title of the passkey creation prompt."
+  },
+  "modalCreateMessage": {
+    "message": "$SITE$ souhaite créer une clé d’accès.",
+    "description": "Body of the passkey creation prompt without a user name.",
+    "placeholders": {
+      "site": { "content": "$1", "example": "example.com" }
+    }
+  },
+  "modalCreateMessageUser": {
+    "message": "$SITE$ souhaite créer une clé d’accès pour $USER$.",
+    "description": "Body of the passkey creation prompt with a user name.",
+    "placeholders": {
+      "site": { "content": "$1", "example": "example.com" },
+      "user": { "content": "$2", "example": "jane@example.com" }
+    }
+  },
+  "modalGetTitle": {
+    "message": "Se connecter avec une clé d’accès",
+    "description": "Title of the passkey login prompt."
+  },
+  "modalGetMessage": {
+    "message": "$SITE$ souhaite utiliser votre clé d’accès.",
+    "description": "Body of the passkey login prompt.",
+    "placeholders": {
+      "site": { "content": "$1", "example": "example.com" }
+    }
+  },
+  "modalErrorTitle": {
+    "message": "Erreur",
+    "description": "Title of the error dialog."
+  },
+
+  "errorCancelled": {
+    "message": "Annulé",
+    "description": "Error message when the user dismisses the prompt."
+  },
+  "errorUnknown": {
+    "message": "Erreur inconnue",
+    "description": "Fallback error message."
+  },
+  "errorTimeout": {
+    "message": "Délai dépassé",
+    "description": "Error message when a WebAuthn request times out."
+  },
+  "errorPasskey": {
+    "message": "Erreur de clé d’accès",
+    "description": "Fallback error message for a failed WebAuthn request."
+  },
+  "errorInvalidRpId": {
+    "message": "rpId « $RPID$ » n’est pas valide pour l’origine « $ORIGIN$ »",
+    "description": "Error when a site asks for a passkey of another domain.",
+    "placeholders": {
+      "rpid": { "content": "$1", "example": "example.com" },
+      "origin": { "content": "$2", "example": "www.example.com" }
+    }
+  },
+  "errorNoPasskeyFound": {
+    "message": "Aucune clé d’accès pour « $RPID$ » – enregistrées : [$STORED$]. Veuillez d’abord créer une clé d’accès.",
+    "description": "Error when no passkey matches the requesting site.",
+    "placeholders": {
+      "rpid": { "content": "$1", "example": "example.com" },
+      "stored": { "content": "$2", "example": "example.org, example.net" }
+    }
+  },
+  "errorNoAllowedPasskey": {
+    "message": "Aucune des clés d’accès autorisées n’a été trouvée",
+    "description": "Error when no stored passkey is in allowCredentials."
+  },
+  "listNone": {
+    "message": "(aucune)",
+    "description": "Placeholder for an empty list of stored passkeys."
+  }
+}
