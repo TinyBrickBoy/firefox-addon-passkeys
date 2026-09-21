@@ -4,9 +4,14 @@ on:
   push:
     branches: [main]
     tags:
-      - "v*"
+      # Sowohl "1.2.3" als auch "v1.2.3" auslösen
+      - "[0-9]+.[0-9]+.[0-9]+"
+      - "v[0-9]+.[0-9]+.[0-9]+"
   pull_request:
     branches: [main]
+
+env:
+  WEB_EXT_IGNORE: --ignore-files ".github/**" "generate-icons.js" "dist/**"
 
 jobs:
   # ─── Lint & Validate ────────────────────────────────────────────────────────
@@ -24,7 +29,7 @@ jobs:
         run: npm install -g web-ext
 
       - name: Addon validieren
-        run: web-ext lint --source-dir . --ignore-files ".github/**" "generate-icons.js"
+        run: web-ext lint --source-dir . ${{ env.WEB_EXT_IGNORE }}
 
   # ─── Build & Artifact ───────────────────────────────────────────────────────
   build:
@@ -46,24 +51,39 @@ jobs:
           web-ext build \
             --source-dir . \
             --artifacts-dir ./dist \
-            --ignore-files ".github/**" "generate-icons.js" "dist/**" \
+            ${{ env.WEB_EXT_IGNORE }} \
             --overwrite-dest
+
+      - name: Addon entpacken
+        # GitHub packt jedes Artefakt beim Download nochmal in ein ZIP. Würde hier
+        # die gebaute .zip hochgeladen, bekäme man ein ZIP im ZIP und AMO meldet
+        # beim Hochladen "manifest.json was not found". Entpackt hochgeladen liegt
+        # die manifest.json im Download direkt in der Wurzel.
+        run: |
+          mkdir -p dist/unpacked
+          unzip -q dist/*.zip -d dist/unpacked
+          test -f dist/unpacked/manifest.json
 
       - name: Artifact hochladen
         uses: actions/upload-artifact@v4
         with:
-          name: addon-zip
-          path: dist/*.zip
+          name: linux-passkey-manager
+          path: dist/unpacked
           retention-days: 30
 
-  # ─── Release (nur bei Tag v*) ────────────────────────────────────────────────
+  # ─── Release (nur bei Version-Tag) ──────────────────────────────────────────
   release:
     name: Release
     runs-on: ubuntu-latest
     needs: build
-    if: startsWith(github.ref, 'refs/tags/v')
+    if: startsWith(github.ref, 'refs/tags/')
     permissions:
       contents: write
+    env:
+      # Secrets lassen sich in einer step-"if"-Bedingung nicht direkt abfragen,
+      # deshalb hier auf Job-Ebene durchreichen.
+      AMO_API_KEY: ${{ secrets.AMO_API_KEY }}
+      AMO_API_SECRET: ${{ secrets.AMO_API_SECRET }}
     steps:
       - uses: actions/checkout@v4
 
@@ -74,10 +94,15 @@ jobs:
       - name: web-ext installieren
         run: npm install -g web-ext
 
-      - name: Version aus manifest.json lesen
+      - name: Version gegen Tag prüfen
         id: version
         run: |
           VERSION=$(node -p "require('./manifest.json').version")
+          TAG="${GITHUB_REF_NAME#v}"
+          if [ "$VERSION" != "$TAG" ]; then
+            echo "::error::Tag $GITHUB_REF_NAME passt nicht zur Version $VERSION in manifest.json"
+            exit 1
+          fi
           echo "version=$VERSION" >> $GITHUB_OUTPUT
 
       - name: Addon bauen
@@ -85,23 +110,24 @@ jobs:
           web-ext build \
             --source-dir . \
             --artifacts-dir ./dist \
-            --ignore-files ".github/**" "generate-icons.js" "dist/**" \
+            ${{ env.WEB_EXT_IGNORE }} \
             --overwrite-dest
 
-      # Optional: AMO-Signierung (benötigt Secrets AMO_API_KEY + AMO_API_SECRET)
-      # Secrets in GitHub → Settings → Secrets and Variables → Actions eintragen
-      - name: Addon signieren (AMO)
-        if: ${{ env.AMO_API_KEY != '' }}
-        env:
-          AMO_API_KEY: ${{ secrets.AMO_API_KEY }}
-          AMO_API_SECRET: ${{ secrets.AMO_API_SECRET }}
+      # Lädt die neue Version bei AMO hoch. Sobald Mozilla sie freigibt, bekommen
+      # alle bestehenden Nutzer das Update automatisch über Firefox.
+      # Benötigt die Secrets AMO_API_KEY + AMO_API_SECRET
+      # (GitHub → Settings → Secrets and variables → Actions).
+      - name: Bei AMO einreichen
+        if: env.AMO_API_KEY != ''
         run: |
           web-ext sign \
             --source-dir . \
             --artifacts-dir ./dist \
-            --ignore-files ".github/**" "generate-icons.js" "dist/**" \
+            ${{ env.WEB_EXT_IGNORE }} \
+            --channel listed \
             --api-key "$AMO_API_KEY" \
-            --api-secret "$AMO_API_SECRET"
+            --api-secret "$AMO_API_SECRET" \
+            --approval-timeout 0
 
       - name: GitHub Release erstellen
         uses: softprops/action-gh-release@v2
@@ -110,12 +136,12 @@ jobs:
           body: |
             ## Linux Passkey Manager v${{ steps.version.outputs.version }}
 
-            ### Installation
-            1. Firefox öffnen → `about:addons`
-            2. Zahnrad → **Add-on aus Datei installieren**
-            3. `.xpi` Datei auswählen
+            Installation über [addons.mozilla.org](https://addons.mozilla.org/de/firefox/addon/linux-passkey-manager/).
+            Bestehende Nutzer bekommen das Update automatisch von Firefox.
 
-            > Ohne AMO-Signierung: Firefox Developer Edition + `xpinstall.signatures.required = false` in `about:config`
-          files: dist/*
+            Die angehängte `.zip` ist das gebaute Add-on für manuelle Installation:
+            Firefox öffnen → `about:debugging#/runtime/this-firefox` →
+            **Temporäres Add-on laden**.
+          files: dist/*.zip
           draft: false
           prerelease: false
