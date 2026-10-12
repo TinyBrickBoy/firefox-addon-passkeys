@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title data-i18n="backupTitle">Backup</title>
+  <link rel="stylesheet" href="backup.css">
+</head>
+<body>
+  <main>
+    <header>
+      <h1 data-i18n="backupTitle"></h1>
+      <p data-i18n="backupSubtitle"></p>
+    </header>
+
+    <p class="warning" data-i18n="backupWarning"></p>
+
+    <section>
+      <h2 data-i18n="syncTitle"></h2>
+      <p class="hint" data-i18n="syncHint"></p>
+      <p class="sync-state" id="sync-state" role="status"></p>
+      <form id="sync-form">
+        <label for="sync-server" data-i18n="syncServerLabel"></label>
+        <input id="sync-server" type="url" placeholder="https://cloud.example.com" autocomplete="url" required>
+        <label for="sync-username" data-i18n="syncUsernameLabel"></label>
+        <input id="sync-username" type="text" autocomplete="username" required>
+        <label for="sync-app-password" data-i18n="syncAppPasswordLabel"></label>
+        <input id="sync-app-password" type="password" autocomplete="off">
+        <p class="hint" data-i18n="syncAppPasswordHint"></p>
+        <label for="sync-folder" data-i18n="syncFolderLabel"></label>
+        <input id="sync-folder" type="text" placeholder="Passkeys">
+        <label for="sync-password" data-i18n="syncPasswordLabel"></label>
+        <input id="sync-password" type="password" autocomplete="new-password">
+        <p class="hint" data-i18n="syncPasswordHint"></p>
+        <div class="actions">
+          <button class="btn btn-primary" type="submit" data-i18n="syncSaveButton"></button>
+          <button class="btn btn-secondary hidden" type="button" id="sync-now" data-i18n="syncNowButton"></button>
+          <button class="btn btn-secondary hidden" type="button" id="sync-disable" data-i18n="syncDisableButton"></button>
+        </div>
+        <p class="status" id="sync-status" role="status"></p>
+      </form>
+    </section>
+
+    <section>
+      <h2 data-i18n="backupExportTitle"></h2>
+      <p class="hint" id="export-hint"></p>
+      <form id="export-form">
+        <label for="export-password" data-i18n="backupPasswordLabel"></label>
+        <input id="export-password" type="password" autocomplete="new-password" required>
+        <label for="export-password-confirm" data-i18n="backupPasswordConfirmLabel"></label>
+        <input id="export-password-confirm" type="password" autocomplete="new-password" required>
+        <button class="btn btn-primary" type="submit" data-i18n="backupExportButton"></button>
+        <p class="status" id="export-status" role="status"></p>
+      </form>
+    </section>
+
+    <section>
+      <h2 data-i18n="backupImportTitle"></h2>
+      <p class="hint" data-i18n="backupImportHint"></p>
+      <form id="import-form">
+        <label for="import-file" data-i18n="backupFileLabel"></label>
+        <input id="import-file" type="file" accept=".json,application/json" required>
+        <label for="import-password" data-i18n="backupPasswordLabel"></label>
+        <input id="import-password" type="password" autocomplete="current-password" required>
+        <button class="btn btn-primary" type="submit" data-i18n="backupImportButton"></button>
+        <p class="status" id="import-status" role="status"></p>
+      </form>
+    </section>
+  </main>
+
+  <script src="../lib/backup-crypto.js"></script>
+  <script src="backup.js"></script>
+</body>
+</html>
