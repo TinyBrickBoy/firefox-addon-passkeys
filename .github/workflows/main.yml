@@ -94,15 +94,18 @@ jobs:
       - name: web-ext installieren
         run: npm install -g web-ext
 
-      - name: Version gegen Tag prüfen
+      # Die Version kommt aus dem Tag ("1.2.0" oder "v1.2.0") und wird in die
+      # manifest.json geschrieben. Von Hand hochzählen ist nicht nötig.
+      - name: Version aus Tag übernehmen
         id: version
         run: |
-          VERSION=$(node -p "require('./manifest.json').version")
-          TAG="${GITHUB_REF_NAME#v}"
-          if [ "$VERSION" != "$TAG" ]; then
-            echo "::error::Tag $GITHUB_REF_NAME passt nicht zur Version $VERSION in manifest.json"
+          VERSION="${GITHUB_REF_NAME#v}"
+          if ! [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::Tag $GITHUB_REF_NAME ist keine Version wie 1.2.3"
             exit 1
           fi
+          sed -i -E "s/(\"version\"[[:space:]]*:[[:space:]]*\")[^\"]*(\")/\1$VERSION\2/" manifest.json
+          test "$(node -p "require('./manifest.json').version")" = "$VERSION"
           echo "version=$VERSION" >> $GITHUB_OUTPUT
 
       - name: Addon bauen
@@ -145,3 +148,22 @@ jobs:
           files: dist/*.zip
           draft: false
           prerelease: false
+
+      # Schreibt die neue Version zurück nach main, damit die manifest.json im
+      # Repository zum letzten Release passt.
+      - name: Version nach main übernehmen
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          git checkout -- manifest.json
+          git fetch origin main
+          git checkout -B main origin/main
+          sed -i -E "s/(\"version\"[[:space:]]*:[[:space:]]*\")[^\"]*(\")/\1$VERSION\2/" manifest.json
+          if git diff --quiet; then
+            echo "manifest.json steht auf main schon auf $VERSION"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -am "chore: bump version to $VERSION"
+          git push origin main || echo "::warning::Konnte die Version nicht nach main pushen (Branch-Schutz?). Bitte manifest.json von Hand auf $VERSION setzen."
