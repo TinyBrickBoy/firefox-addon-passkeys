@@ -10,7 +10,7 @@
     "<all_urls>"
   ],
   "background": {
-    "scripts": ["background.js"]
+    "scripts": ["lib/backup-crypto.js", "background.js", "sync.js"]
   },
   "content_scripts": [
     {

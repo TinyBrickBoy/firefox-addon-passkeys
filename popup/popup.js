@@ -88,6 +88,13 @@ $('btn-confirm').onclick = async () => {
   load();
 };
 
+// Export und Import laufen in einem eigenen Tab, weil Firefox das Popup
+// schließt, sobald sich der Datei-Dialog öffnet.
+$('btn-backup').onclick = async () => {
+  await browser.tabs.create({ url: browser.runtime.getURL('backup/backup.html') });
+  window.close();
+};
+
 async function load() {
   loadingEl.classList.remove('hidden');
   listEl.classList.add('hidden');

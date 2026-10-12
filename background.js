@@ -385,29 +385,150 @@ async function handleGet(options, origin, hostname) {
 }
 
 // ─── Speicher ─────────────────────────────────────────────────────────────────
+//
+// storage.local enthält:
+//   passkeys         – die Passkeys, jeweils mit `modified` (letzte Änderung)
+//   deletedPasskeys  – gelöschte Credential IDs mit Zeitpunkt, damit der Sync
+//                      einen gelöschten Passkey nicht vom anderen PC zurückholt
+
+// Lese-Ändere-Schreibe-Abläufe nacheinander ausführen, damit sich Anmeldung,
+// Löschen, Import und Sync nicht gegenseitig überschreiben.
+let storageQueue = Promise.resolve();
+function withStorageLock(fn) {
+  const run = storageQueue.then(fn, fn);
+  storageQueue = run.catch(() => {});
+  return run;
+}
 
 async function loadPasskeys() {
   const result = await browser.storage.local.get('passkeys');
   return result.passkeys || [];
 }
 
-async function storePasskey(passkey) {
-  const passkeys = await loadPasskeys();
-  passkeys.push(passkey);
-  await browser.storage.local.set({ passkeys });
+async function loadStore() {
+  const result = await browser.storage.local.get(['passkeys', 'deletedPasskeys']);
+  return { passkeys: result.passkeys || [], deleted: result.deletedPasskeys || [] };
 }
 
-async function updatePasskey(updated) {
-  const passkeys = await loadPasskeys();
-  const idx = passkeys.findIndex(pk => pk.credentialId === updated.credentialId);
-  if (idx >= 0) passkeys[idx] = updated;
-  await browser.storage.local.set({ passkeys });
+async function saveStore(store) {
+  await browser.storage.local.set({ passkeys: store.passkeys, deletedPasskeys: store.deleted });
+  onPasskeysChanged();
 }
 
-async function deletePasskey(credentialId) {
-  const passkeys = await loadPasskeys();
-  const filtered = passkeys.filter(pk => pk.credentialId !== credentialId);
-  await browser.storage.local.set({ passkeys: filtered });
+function storePasskey(passkey) {
+  return withStorageLock(async () => {
+    const store = await loadStore();
+    store.passkeys.push({ ...passkey, modified: new Date().toISOString() });
+    await saveStore(store);
+  });
+}
+
+function updatePasskey(updated) {
+  return withStorageLock(async () => {
+    const store = await loadStore();
+    const idx = store.passkeys.findIndex(pk => pk.credentialId === updated.credentialId);
+    if (idx < 0) return;
+    // Der Zähler darf nie zurückgehen, auch wenn ein Sync dazwischen lag
+    const counter = Math.max(updated.counter || 0, store.passkeys[idx].counter || 0);
+    store.passkeys[idx] = { ...updated, counter, modified: new Date().toISOString() };
+    await saveStore(store);
+  });
+}
+
+function deletePasskey(credentialId) {
+  return withStorageLock(async () => {
+    const store = await loadStore();
+    store.passkeys = store.passkeys.filter(pk => pk.credentialId !== credentialId);
+    store.deleted = store.deleted.filter(d => d.credentialId !== credentialId);
+    store.deleted.push({ credentialId, deleted: new Date().toISOString() });
+    await saveStore(store);
+  });
+}
+
+// Prüft, ob ein importierter Eintrag alles hat, was handleGet zum Signieren braucht
+function isValidPasskey(pk) {
+  const isBytes = arr => Array.isArray(arr) && arr.length === 32 &&
+    arr.every(b => Number.isInteger(b) && b >= 0 && b <= 255);
+  return !!pk && typeof pk === 'object' &&
+    typeof pk.credentialId === 'string' && pk.credentialId !== '' &&
+    typeof pk.rpId === 'string' && pk.rpId !== '' &&
+    typeof pk.userId === 'string' &&
+    !!pk.privateKeyJwk && pk.privateKeyJwk.kty === 'EC' && pk.privateKeyJwk.crv === 'P-256' &&
+    typeof pk.privateKeyJwk.d === 'string' &&
+    isBytes(pk.publicKeyX) && isBytes(pk.publicKeyY) &&
+    Number.isInteger(pk.counter) && pk.counter >= 0;
+}
+
+function isValidTombstone(d) {
+  return !!d && typeof d.credentialId === 'string' && typeof d.deleted === 'string';
+}
+
+const modifiedOf = pk => pk.modified || pk.created || '';
+
+// Führt zwei Stände zusammen. Pro Credential ID gewinnt das jüngste Ereignis:
+// eine Änderung am Passkey oder sein Löschen. Der Zähler ist immer das Maximum
+// beider Seiten, damit Websites den Passkey nicht wegen eines zurückgesetzten
+// Zählers ablehnen. Liefert den neuen Stand und was sich lokal geändert hat.
+function mergeStores(local, remote) {
+  const passkeys = new Map(local.passkeys.map(pk => [pk.credentialId, pk]));
+  const deleted = new Map(local.deleted.map(d => [d.credentialId, d.deleted]));
+  let added = 0, updated = 0, removed = 0;
+
+  for (const d of remote.deleted.filter(isValidTombstone)) {
+    if (!deleted.has(d.credentialId) || d.deleted > deleted.get(d.credentialId)) {
+      deleted.set(d.credentialId, d.deleted);
+    }
+  }
+
+  for (const pk of remote.passkeys.filter(isValidPasskey)) {
+    const mine = passkeys.get(pk.credentialId);
+    if (!mine) {
+      passkeys.set(pk.credentialId, pk);
+      added++;
+    } else if (pk.counter > mine.counter || modifiedOf(pk) > modifiedOf(mine)) {
+      const newer = modifiedOf(pk) > modifiedOf(mine) ? pk : mine;
+      const merged = { ...newer, counter: Math.max(pk.counter, mine.counter) };
+      if (JSON.stringify(merged) !== JSON.stringify(mine)) updated++;
+      passkeys.set(pk.credentialId, merged);
+    }
+  }
+
+  // Löschen gewinnt nur, wenn es nach der letzten Änderung des Passkeys passierte
+  for (const [id, when] of deleted) {
+    const pk = passkeys.get(id);
+    if (!pk) continue;
+    if (when >= modifiedOf(pk)) {
+      passkeys.delete(id);
+      if (local.passkeys.some(p => p.credentialId === id)) removed++;
+      else added--;
+    } else {
+      deleted.delete(id);
+    }
+  }
+
+  return {
+    store: {
+      passkeys: [...passkeys.values()],
+      deleted: [...deleted].map(([credentialId, when]) => ({ credentialId, deleted: when })),
+    },
+    added, updated, removed,
+  };
+}
+
+// Import aus einer Backup-Datei. Importierte Passkeys gelten als gerade
+// geändert, damit sie auch einen früher gelöschten Stand wiederherstellen.
+function importPasskeys(imported) {
+  if (!Array.isArray(imported)) return Promise.reject(new Error('Invalid backup'));
+  return withStorageLock(async () => {
+    const now = new Date().toISOString();
+    const local = await loadStore();
+    const known = new Set(local.passkeys.map(pk => pk.credentialId));
+    const valid = imported.filter(isValidPasskey)
+      .map(pk => known.has(pk.credentialId) ? pk : { ...pk, modified: now });
+    const { store, added, updated } = mergeStores(local, { passkeys: valid, deleted: [] });
+    await saveStore(store);
+    return { added, updated, skipped: imported.length - added - updated };
+  });
 }
 
 // ─── Message Handler ──────────────────────────────────────────────────────────
@@ -450,5 +571,29 @@ browser.runtime.onMessage.addListener(function (msg, sender) {
 
   if (msg.action === 'delete-passkey') {
     return deletePasskey(msg.credentialId).then(() => ({ success: true }));
+  }
+
+  // Ab hier nur für Seiten des Addons selbst, nie aus einem Content Script
+  if (!sender.url || !sender.url.startsWith(browser.runtime.getURL(''))) return;
+
+  if (msg.action === 'import-passkeys') {
+    return importPasskeys(msg.passkeys)
+      .catch(err => ({ error: err.message }));
+  }
+
+  if (msg.action === 'sync-get-settings') {
+    return getSyncSettings();
+  }
+
+  if (msg.action === 'sync-save-settings') {
+    return saveSyncSettings(msg.settings);
+  }
+
+  if (msg.action === 'sync-now') {
+    return syncNow().then(() => getSyncSettings());
+  }
+
+  if (msg.action === 'sync-disable') {
+    return disableSync();
   }
 });

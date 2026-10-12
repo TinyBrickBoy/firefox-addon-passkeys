@@ -151,5 +151,216 @@
   "listNone": {
     "message": "(aucune)",
     "description": "Placeholder for an empty list of stored passkeys."
+  },
+
+  "popupBackupButton": {
+    "message": "Sauvegarde et synchronisation",
+    "description": "Label of the popup button that opens the backup and sync page."
+  },
+  "backupTitle": {
+    "message": "Sauvegarde et synchronisation",
+    "description": "Title of the backup and sync page."
+  },
+  "backupSubtitle": {
+    "message": "Synchronise tes passkeys via Nextcloud ou enregistre-les dans un fichier chiffré.",
+    "description": "Subtitle of the backup page."
+  },
+  "backupWarning": {
+    "message": "Les fichiers de sauvegarde et de synchronisation contiennent tes clés privées. Toute personne disposant du fichier et du mot de passe peut se connecter avec tes passkeys. Conserve-les en lieu sûr et séparément.",
+    "description": "Warning about what a backup or sync file contains."
+  },
+  "syncTitle": {
+    "message": "Synchronisation Nextcloud",
+    "description": "Heading of the Nextcloud sync section."
+  },
+  "syncHint": {
+    "message": "Configure la synchronisation avec les mêmes informations sur chaque PC. Tes passkeys sont stockés chiffrés dans ton Nextcloud et synchronisés à chaque modification et toutes les 15 minutes.",
+    "description": "Explains how the sync works."
+  },
+  "syncServerLabel": {
+    "message": "Adresse Nextcloud",
+    "description": "Label of the Nextcloud server URL field."
+  },
+  "syncUsernameLabel": {
+    "message": "Nom d’utilisateur",
+    "description": "Label of the Nextcloud user name field."
+  },
+  "syncAppPasswordLabel": {
+    "message": "Mot de passe d’application",
+    "description": "Label of the Nextcloud app password field."
+  },
+  "syncAppPasswordHint": {
+    "message": "Crée-le dans Nextcloud sous Paramètres personnels › Sécurité › Appareils et sessions.",
+    "description": "Where to create a Nextcloud app password."
+  },
+  "syncFolderLabel": {
+    "message": "Dossier dans Nextcloud",
+    "description": "Label of the Nextcloud folder field."
+  },
+  "syncPasswordLabel": {
+    "message": "Mot de passe de synchronisation",
+    "description": "Label of the sync encryption password field."
+  },
+  "syncPasswordHint": {
+    "message": "Chiffre le fichier dans Nextcloud. Doit être identique sur tous les PC, au moins 8 caractères.",
+    "description": "Explains the sync encryption password."
+  },
+  "syncSavedPlaceholder": {
+    "message": "Enregistré, laisser vide pour conserver",
+    "description": "Placeholder of a password field when a password is already saved."
+  },
+  "syncSaveButton": {
+    "message": "Enregistrer et synchroniser",
+    "description": "Label of the button that saves the sync settings."
+  },
+  "syncNowButton": {
+    "message": "Synchroniser maintenant",
+    "description": "Label of the button that starts a sync."
+  },
+  "syncDisableButton": {
+    "message": "Désactiver la synchronisation",
+    "description": "Label of the button that turns sync off."
+  },
+  "syncRunning": {
+    "message": "Synchronisation…",
+    "description": "Shown while a sync is running."
+  },
+  "syncStateOff": {
+    "message": "La synchronisation est désactivée.",
+    "description": "Sync status when sync is off."
+  },
+  "syncStatePending": {
+    "message": "Pas encore synchronisé.",
+    "description": "Sync status before the first sync."
+  },
+  "syncStateOk": {
+    "message": "Dernière synchronisation : $TIME$",
+    "description": "Sync status after a successful sync.",
+    "placeholders": {
+      "time": { "content": "$1", "example": "12.10.26, 09:30" }
+    }
+  },
+  "syncStateError": {
+    "message": "Échec de la synchronisation : $ERROR$",
+    "description": "Sync status after a failed sync.",
+    "placeholders": {
+      "error": { "content": "$1", "example": "Wrong password" }
+    }
+  },
+  "syncErrorMissingFields": {
+    "message": "Indique l’adresse, le nom d’utilisateur et le mot de passe d’application.",
+    "description": "Error when sync settings are incomplete."
+  },
+  "syncErrorNetwork": {
+    "message": "Impossible de joindre $SERVER$.",
+    "description": "Error when Nextcloud cannot be reached.",
+    "placeholders": {
+      "server": { "content": "$1", "example": "https://cloud.example.com" }
+    }
+  },
+  "syncErrorAuth": {
+    "message": "Nextcloud a refusé la connexion. Vérifie le nom d’utilisateur et le mot de passe d’application.",
+    "description": "Error when Nextcloud rejects the login."
+  },
+  "syncErrorServer": {
+    "message": "Nextcloud a répondu avec le statut $STATUS$.",
+    "description": "Error for an unexpected HTTP status from Nextcloud.",
+    "placeholders": {
+      "status": { "content": "$1", "example": "500" }
+    }
+  },
+  "syncErrorWrongPassword": {
+    "message": "Le mot de passe de synchronisation ne correspond pas au fichier dans Nextcloud.",
+    "description": "Error when the sync file cannot be decrypted."
+  },
+  "syncErrorRemoteInvalid": {
+    "message": "Le fichier de synchronisation dans Nextcloud est endommagé.",
+    "description": "Error when the sync file is damaged."
+  },
+  "syncErrorConflict": {
+    "message": "Un autre PC a modifié le fichier en même temps. Réessaie dans un instant.",
+    "description": "Error when other PCs keep changing the file."
+  },
+  "backupExportTitle": {
+    "message": "Exporter",
+    "description": "Heading of the export section."
+  },
+  "backupExportHint": {
+    "message": "$COUNT$ passkeys seront chiffrés avec un mot de passe et enregistrés dans un fichier.",
+    "description": "How many passkeys will be exported.",
+    "placeholders": {
+      "count": { "content": "$1", "example": "3" }
+    }
+  },
+  "backupPasswordLabel": {
+    "message": "Mot de passe",
+    "description": "Label of the backup password field."
+  },
+  "backupPasswordConfirmLabel": {
+    "message": "Répéter le mot de passe",
+    "description": "Label of the password confirmation field."
+  },
+  "backupExportButton": {
+    "message": "Télécharger la sauvegarde",
+    "description": "Label of the export button."
+  },
+  "backupExportDone": {
+    "message": "$COUNT$ passkeys exportés.",
+    "description": "Shown after a successful export.",
+    "placeholders": {
+      "count": { "content": "$1", "example": "3" }
+    }
+  },
+  "backupImportTitle": {
+    "message": "Importer",
+    "description": "Heading of the import section."
+  },
+  "backupImportHint": {
+    "message": "Les passkeys existants sont conservés. Les nouveaux sont ajoutés, ceux déjà connus ne sont remplacés que si la sauvegarde est plus récente.",
+    "description": "Explains how an import is merged."
+  },
+  "backupFileLabel": {
+    "message": "Fichier de sauvegarde",
+    "description": "Label of the backup file picker."
+  },
+  "backupImportButton": {
+    "message": "Importer la sauvegarde",
+    "description": "Label of the import button."
+  },
+  "backupImportDone": {
+    "message": "Importé : $ADDED$ nouveaux, $UPDATED$ mis à jour, $SKIPPED$ ignorés.",
+    "description": "Shown after an import.",
+    "placeholders": {
+      "added": { "content": "$1", "example": "2" },
+      "updated": { "content": "$2", "example": "1" },
+      "skipped": { "content": "$3", "example": "0" }
+    }
+  },
+  "backupErrorPasswordShort": {
+    "message": "Le mot de passe doit contenir au moins $MIN$ caractères.",
+    "description": "Error when a password is too short.",
+    "placeholders": {
+      "min": { "content": "$1", "example": "8" }
+    }
+  },
+  "backupErrorPasswordMismatch": {
+    "message": "Les mots de passe ne correspondent pas.",
+    "description": "Error when the two passwords differ."
+  },
+  "backupErrorNoPasskeys": {
+    "message": "Il n’y a aucun passkey à exporter.",
+    "description": "Error when there is nothing to export."
+  },
+  "backupErrorNoFile": {
+    "message": "Choisis d’abord un fichier de sauvegarde.",
+    "description": "Error when no file was chosen."
+  },
+  "backupErrorInvalidFile": {
+    "message": "Ce fichier n’est pas une sauvegarde de passkeys valide.",
+    "description": "Error when the file is not a backup of this addon."
+  },
+  "backupErrorWrongPassword": {
+    "message": "Mot de passe incorrect ou fichier endommagé.",
+    "description": "Error when decryption fails."
   }
 }
