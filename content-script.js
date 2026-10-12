@@ -132,21 +132,52 @@
     .btn-confirm { background: var(--btn-pri-bg); color: var(--btn-pri-fg); }
   `;
 
+  // Das Modal liegt in einem eigenen modalen <dialog>. So landet es im Top Layer
+  // über modalen Dialogen der Seite, die sonst alles andere inert machen (#4).
+  // <dialog> kann selbst keinen Shadow Root haben, daher steckt darin ein <div>.
+  const DIALOG_CSS = [
+    'all:initial', 'display:block', 'position:fixed', 'inset:0',
+    'width:100%', 'height:100%', 'max-width:none', 'max-height:none',
+    'margin:0', 'padding:0', 'border:0', 'background:transparent',
+    'overflow:visible', 'z-index:2147483647',
+  ].map(rule => rule + ' !important').join(';');
+
+  let onModalCancel = null;
+
   function createHost() {
-    if (activeModal) { activeModal.remove(); activeModal = null; }
+    closeModal();
+    const dialog = document.createElement('dialog');
+    dialog.style.cssText = DIALOG_CSS;
+    // Escape schließt das Modal wie "Abbrechen", statt den Dialog nur zu verstecken
+    dialog.addEventListener('cancel', (e) => {
+      e.preventDefault();
+      if (onModalCancel) onModalCancel();
+      else closeModal();
+    });
     const host = document.createElement('div');
-    host.style.cssText = 'all:initial;position:fixed;inset:0;z-index:2147483647;';
+    host.style.cssText = 'all:initial;display:block;position:absolute;inset:0;';
     const shadow = host.attachShadow({ mode: 'open' });
     const style = document.createElement('style');
     style.textContent = MODAL_CSS;
     shadow.appendChild(style);
-    document.documentElement.appendChild(host);
-    activeModal = host;
+    dialog.appendChild(host);
+    document.documentElement.appendChild(dialog);
+    try {
+      dialog.showModal();
+    } catch (err) {
+      dialog.setAttribute('open', '');
+    }
+    activeModal = dialog;
     return shadow;
   }
 
   function closeModal() {
-    if (activeModal) { activeModal.remove(); activeModal = null; }
+    onModalCancel = null;
+    if (activeModal) {
+      if (activeModal.open) activeModal.close();
+      activeModal.remove();
+      activeModal = null;
+    }
   }
 
   function el(tag, className) {
@@ -226,9 +257,11 @@
       actions.appendChild(btnConfirm);
       card.appendChild(actions);
 
+      const cancel = () => { closeModal(); resolve(false); };
+      onModalCancel = cancel;
       btnConfirm.onclick = () => { closeModal(); resolve(true); };
-      btnCancel.onclick  = () => { closeModal(); resolve(false); };
-      backdrop.onclick   = (e) => { if (e.target === backdrop) { closeModal(); resolve(false); } };
+      btnCancel.onclick  = cancel;
+      backdrop.onclick   = (e) => { if (e.target === backdrop) cancel(); };
     });
   }
 
