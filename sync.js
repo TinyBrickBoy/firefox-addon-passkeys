@@ -226,6 +226,7 @@ function scheduleSync(delay = SYNC_DELAY_MS) {
 // Wird von saveStore nach jeder lokalen Änderung aufgerufen
 function onPasskeysChanged() {
   if (!syncApplying) scheduleSync();
+  onPasskeysChangedFx();
 }
 
 scheduleSync(0);

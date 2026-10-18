@@ -162,12 +162,36 @@
     "description": "Title of the backup and sync page."
   },
   "backupSubtitle": {
-    "message": "Synchronise tes passkeys via Nextcloud ou enregistre-les dans un fichier chiffré.",
+    "message": "Synchronise tes passkeys via Firefox Sync ou Nextcloud, ou enregistre-les dans un fichier chiffré.",
     "description": "Subtitle of the backup page."
   },
   "backupWarning": {
     "message": "Les fichiers de sauvegarde et de synchronisation contiennent tes clés privées. Toute personne disposant du fichier et du mot de passe peut se connecter avec tes passkeys. Conserve-les en lieu sûr et séparément.",
     "description": "Warning about what a backup or sync file contains."
+  },
+  "fxSyncTitle": {
+    "message": "Firefox Sync",
+    "description": "Heading of the Firefox Sync section."
+  },
+  "fxSyncHint": {
+    "message": "Synchronise tes passkeys chiffrés via ton compte Firefox. Connecte-toi à Firefox Sync sur chaque PC et active « Modules complémentaires » dans ses paramètres. Place pour environ 80 passkeys.",
+    "description": "Explains how Firefox Sync works and what to turn on."
+  },
+  "fxSyncPasswordHint": {
+    "message": "Chiffre les passkeys dans Firefox Sync. Doit être identique sur chaque PC, au moins 8 caractères.",
+    "description": "Explains the Firefox Sync encryption password."
+  },
+  "fxSyncErrorWrongPassword": {
+    "message": "Le mot de passe de synchronisation ne correspond pas aux passkeys dans Firefox Sync.",
+    "description": "Error when the passkeys in Firefox Sync cannot be decrypted."
+  },
+  "fxSyncErrorRemoteInvalid": {
+    "message": "Les passkeys dans Firefox Sync sont endommagés.",
+    "description": "Error when the data in Firefox Sync is damaged."
+  },
+  "fxSyncErrorQuota": {
+    "message": "Trop de passkeys pour Firefox Sync. Utilise plutôt la synchronisation Nextcloud ou un fichier de sauvegarde.",
+    "description": "Error when the passkeys do not fit into the Firefox Sync storage limit."
   },
   "syncTitle": {
     "message": "Synchronisation Nextcloud",

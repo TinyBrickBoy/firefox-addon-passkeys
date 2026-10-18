@@ -123,8 +123,11 @@ function renderSync(settings) {
   $('sync-password').required = !settings.hasPassword;
   $('sync-now').classList.toggle('hidden', !enabled);
   $('sync-disable').classList.toggle('hidden', !enabled);
+  renderSyncState($('sync-state'), settings);
+}
 
-  const stateEl = $('sync-state');
+function renderSyncState(stateEl, settings) {
+  const enabled = settings.enabled;
   const state = settings.state || {};
   if (!enabled) {
     stateEl.textContent = t('syncStateOff');
@@ -141,13 +144,12 @@ function renderSync(settings) {
   }
 }
 
-async function syncAction(button, message) {
-  const status = $('sync-status');
+async function syncAction(button, message, status = $('sync-status'), render = renderSync) {
   button.disabled = true;
   setStatus(status, t('syncRunning'));
   try {
     const settings = await browser.runtime.sendMessage(message);
-    renderSync(settings);
+    render(settings);
     setStatus(status, '');
     updateExportHint();
   } catch (err) {
@@ -175,6 +177,33 @@ $('sync-now').onclick = (e) => syncAction(e.currentTarget, { action: 'sync-now' 
 $('sync-disable').onclick = (e) => syncAction(e.currentTarget, { action: 'sync-disable' });
 
 browser.runtime.sendMessage({ action: 'sync-get-settings' }).then(renderSync);
+
+// ─── Firefox Sync ─────────────────────────────────────────────────────────────
+
+function renderFxSync(settings) {
+  const enabled = settings.enabled;
+  $('fxsync-password').value = '';
+  $('fxsync-password').placeholder = settings.hasPassword ? t('syncSavedPlaceholder') : '';
+  $('fxsync-password').required = !settings.hasPassword;
+  $('fxsync-now').classList.toggle('hidden', !enabled);
+  $('fxsync-disable').classList.toggle('hidden', !enabled);
+  renderSyncState($('fxsync-state'), settings);
+}
+
+const fxSyncAction = (button, message) => syncAction(button, message, $('fxsync-status'), renderFxSync);
+
+$('fxsync-form').addEventListener('submit', (e) => {
+  e.preventDefault();
+  fxSyncAction(e.submitter, {
+    action: 'fxsync-save-settings',
+    settings: { password: $('fxsync-password').value },
+  });
+});
+
+$('fxsync-now').onclick = (e) => fxSyncAction(e.currentTarget, { action: 'fxsync-now' });
+$('fxsync-disable').onclick = (e) => fxSyncAction(e.currentTarget, { action: 'fxsync-disable' });
+
+browser.runtime.sendMessage({ action: 'fxsync-get-settings' }).then(renderFxSync);
 updateExportHint();
   } catch (err) {
     setStatus(status, err.message || String(err), 'error');

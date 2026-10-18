@@ -596,4 +596,20 @@ browser.runtime.onMessage.addListener(function (msg, sender) {
   if (msg.action === 'sync-disable') {
     return disableSync();
   }
+
+  if (msg.action === 'fxsync-get-settings') {
+    return getFxSyncSettings();
+  }
+
+  if (msg.action === 'fxsync-save-settings') {
+    return saveFxSyncSettings(msg.settings);
+  }
+
+  if (msg.action === 'fxsync-now') {
+    return fxSyncNow().then(() => getFxSyncSettings());
+  }
+
+  if (msg.action === 'fxsync-disable') {
+    return disableFxSync();
+  }
 });

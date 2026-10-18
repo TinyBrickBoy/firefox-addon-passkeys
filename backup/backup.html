@@ -16,6 +16,23 @@
     <p class="warning" data-i18n="backupWarning"></p>
 
     <section>
+      <h2 data-i18n="fxSyncTitle"></h2>
+      <p class="hint" data-i18n="fxSyncHint"></p>
+      <p class="sync-state" id="fxsync-state" role="status"></p>
+      <form id="fxsync-form">
+        <label for="fxsync-password" data-i18n="syncPasswordLabel"></label>
+        <input id="fxsync-password" type="password" autocomplete="new-password">
+        <p class="hint" data-i18n="fxSyncPasswordHint"></p>
+        <div class="actions">
+          <button class="btn btn-primary" type="submit" data-i18n="syncSaveButton"></button>
+          <button class="btn btn-secondary hidden" type="button" id="fxsync-now" data-i18n="syncNowButton"></button>
+          <button class="btn btn-secondary hidden" type="button" id="fxsync-disable" data-i18n="syncDisableButton"></button>
+        </div>
+        <p class="status" id="fxsync-status" role="status"></p>
+      </form>
+    </section>
+
+    <section>
       <h2 data-i18n="syncTitle"></h2>
       <p class="hint" data-i18n="syncHint"></p>
       <p class="sync-state" id="sync-state" role="status"></p>
