@@ -30,16 +30,18 @@ let fxSyncApplying = false;
 let fxSyncLastGen = null;
 let fxSyncMixedGen = null;
 
+/** Lädt die gespeicherten Firefox-Sync-Einstellungen (oder null). */
 async function loadFxSyncSettings() {
   const { fxSyncSettings } = await browser.storage.local.get('fxSyncSettings');
   return fxSyncSettings || null;
 }
 
+/** Speichert den aktuellen Sync-Status (lastSync/lastError). */
 async function setFxSyncState(state) {
   await browser.storage.local.set({ fxSyncState: state });
 }
 
-// Für die Backup-Seite: ohne Sync-Passwort
+/** Für die Backup-Seite: ohne Sync-Passwort. */
 async function getFxSyncSettings() {
   const { fxSyncSettings, fxSyncState } = await browser.storage.local.get(['fxSyncSettings', 'fxSyncState']);
   const s = fxSyncSettings || {};
@@ -50,7 +52,7 @@ async function getFxSyncSettings() {
   };
 }
 
-// Ein leeres Passwortfeld behält das gespeicherte Passwort
+/** Ein leeres Passwortfeld behält das gespeicherte Passwort. */
 async function saveFxSyncSettings(input) {
   const old = (await loadFxSyncSettings()) || {};
   const settings = { enabled: true, password: input.password || old.password || '' };
@@ -62,6 +64,7 @@ async function saveFxSyncSettings(input) {
   return getFxSyncSettings();
 }
 
+/** Schaltet Firefox Sync aus und entfernt die gespeicherten Einstellungen. */
 async function disableFxSync() {
   await browser.storage.local.remove(['fxSyncSettings', 'fxSyncState']);
   return getFxSyncSettings();
@@ -69,10 +72,13 @@ async function disableFxSync() {
 
 // ─── storage.sync ────────────────────────────────────────────────────────────
 
+/** Liefert den storage.sync-Schlüssel für den i-ten Datenblock. */
 const chunkKey = i => FX_SYNC_KEY + '.' + i;
 
-// Liefert { store, salt }, null wenn noch nichts gespeichert ist, oder
-// { mixed: gen }, wenn die Teile nicht zum Kopf passen
+/**
+ * Liefert { store, salt }, null wenn noch nichts gespeichert ist, oder
+ * { mixed: gen }, wenn die Teile nicht zum Kopf passen.
+ */
 async function readFxRemote(settings) {
   const all = await browser.storage.sync.get(null);
   const head = all[FX_SYNC_KEY];
@@ -98,6 +104,7 @@ async function readFxRemote(settings) {
   }
 }
 
+/** Verschlüsselt den Stand und schreibt ihn in Blöcken nach storage.sync. */
 async function writeFxRemote(settings, store, remote) {
   const { data, ...file } = await BackupCrypto.encrypt(
     { passkeys: store.passkeys, deleted: store.deleted },
@@ -129,6 +136,7 @@ async function writeFxRemote(settings, store, remote) {
   if (stale.length) await browser.storage.sync.remove(stale);
 }
 
+/** Liest den Remote-Stand, führt ihn mit dem lokalen zusammen und schreibt ihn ggf. zurück. */
 async function runFxSync(settings) {
   const remote = await readFxRemote(settings);
   if (remote && remote.mixed && remote.mixed !== fxSyncMixedGen) {
@@ -155,6 +163,7 @@ async function runFxSync(settings) {
   await writeFxRemote(settings, merged, usable);
 }
 
+/** Stößt einen Sync-Durchlauf an und reiht eine weitere Änderung ein, falls schon einer läuft. */
 function fxSyncNow() {
   // Änderungen während eines laufenden Syncs kommen in einem zweiten Durchlauf mit
   if (fxSyncRunning) {
@@ -180,17 +189,18 @@ function fxSyncNow() {
   return fxSyncRunning;
 }
 
+/** Plant einen Sync-Durchlauf nach delay Millisekunden ein. */
 function scheduleFxSync(delay = FX_SYNC_DELAY_MS) {
   clearTimeout(fxSyncTimer);
   fxSyncTimer = setTimeout(fxSyncNow, delay);
 }
 
-// Wird von onPasskeysChanged nach jeder lokalen Änderung aufgerufen
+/** Wird von onPasskeysChanged nach jeder lokalen Änderung aufgerufen. */
 function onPasskeysChangedFx() {
   if (!fxSyncApplying) scheduleFxSync();
 }
 
-// Firefox hat Daten von einem anderen PC geholt
+/** Firefox hat Daten von einem anderen PC geholt. */
 browser.storage.onChanged.addListener((changes, area) => {
   if (area !== 'sync') return;
   const foreign = Object.entries(changes).some(([key, { newValue }]) => {

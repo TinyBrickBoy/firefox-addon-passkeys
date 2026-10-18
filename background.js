@@ -548,6 +548,7 @@ async function hasPasskey(options, hostname) {
   return { found: !!found };
 }
 
+/** Verteilt eingehende Runtime-Nachrichten an die passende Aktion. */
 browser.runtime.onMessage.addListener(function (msg, sender) {
   if (msg.action === 'webauthn-check') {
     return hasPasskey(msg.options, msg.hostname);
