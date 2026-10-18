@@ -104,7 +104,15 @@ $('import-form').addEventListener('submit', async (e) => {
     if (result.error) throw new Error(result.error);
     e.target.reset();
     setStatus(status, t('backupImportDone', result.added, result.updated, result.skipped), 'ok');
-    // ─── Nextcloud-Sync ───────────────────────────────────────────────────────────
+    updateExportHint();
+  } catch (err) {
+    setStatus(status, err.message || String(err), 'error');
+  } finally {
+    button.disabled = false;
+  }
+});
+
+// ─── Nextcloud-Sync ───────────────────────────────────────────────────────────
 
 function fmtTime(iso) {
   return new Date(iso).toLocaleString(browser.i18n.getUILanguage(), { dateStyle: 'short', timeStyle: 'short' });
@@ -204,83 +212,4 @@ $('fxsync-now').onclick = (e) => fxSyncAction(e.currentTarget, { action: 'fxsync
 $('fxsync-disable').onclick = (e) => fxSyncAction(e.currentTarget, { action: 'fxsync-disable' });
 
 browser.runtime.sendMessage({ action: 'fxsync-get-settings' }).then(renderFxSync);
-updateExportHint();
-  } catch (err) {
-    setStatus(status, err.message || String(err), 'error');
-  } finally {
-    button.disabled = false;
-  }
-});
-
-// ─── Nextcloud-Sync ───────────────────────────────────────────────────────────
-
-function fmtTime(iso) {
-  return new Date(iso).toLocaleString(browser.i18n.getUILanguage(), { dateStyle: 'short', timeStyle: 'short' });
-}
-
-function renderSync(settings) {
-  const enabled = settings.enabled;
-  $('sync-server').value = settings.serverUrl;
-  $('sync-username').value = settings.username;
-  $('sync-folder').value = settings.folder;
-  $('sync-app-password').value = '';
-  $('sync-password').value = '';
-  $('sync-app-password').placeholder = settings.hasAppPassword ? t('syncSavedPlaceholder') : '';
-  $('sync-password').placeholder = settings.hasPassword ? t('syncSavedPlaceholder') : '';
-  $('sync-app-password').required = !settings.hasAppPassword;
-  $('sync-password').required = !settings.hasPassword;
-  $('sync-now').classList.toggle('hidden', !enabled);
-  $('sync-disable').classList.toggle('hidden', !enabled);
-
-  const stateEl = $('sync-state');
-  const state = settings.state || {};
-  if (!enabled) {
-    stateEl.textContent = t('syncStateOff');
-    stateEl.className = 'sync-state';
-  } else if (state.lastError) {
-    stateEl.textContent = t('syncStateError', state.lastError);
-    stateEl.className = 'sync-state error';
-  } else if (state.lastSync) {
-    stateEl.textContent = t('syncStateOk', fmtTime(state.lastSync));
-    stateEl.className = 'sync-state ok';
-  } else {
-    stateEl.textContent = t('syncStatePending');
-    stateEl.className = 'sync-state';
-  }
-}
-
-async function syncAction(button, message) {
-  const status = $('sync-status');
-  button.disabled = true;
-  setStatus(status, t('syncRunning'));
-  try {
-    const settings = await browser.runtime.sendMessage(message);
-    renderSync(settings);
-    setStatus(status, '');
-    updateExportHint();
-  } catch (err) {
-    setStatus(status, err.message || String(err), 'error');
-  } finally {
-    button.disabled = false;
-  }
-}
-
-$('sync-form').addEventListener('submit', (e) => {
-  e.preventDefault();
-  syncAction(e.submitter, {
-    action: 'sync-save-settings',
-    settings: {
-      serverUrl: $('sync-server').value,
-      username: $('sync-username').value,
-      appPassword: $('sync-app-password').value,
-      folder: $('sync-folder').value,
-      password: $('sync-password').value,
-    },
-  });
-});
-
-$('sync-now').onclick = (e) => syncAction(e.currentTarget, { action: 'sync-now' });
-$('sync-disable').onclick = (e) => syncAction(e.currentTarget, { action: 'sync-disable' });
-
-browser.runtime.sendMessage({ action: 'sync-get-settings' }).then(renderSync);
 updateExportHint();

@@ -7,10 +7,12 @@
 //   passkeySync      – Kopf der Datei ohne `data`, dazu { gen, chunks }
 //   passkeySync.<i>  – "<gen>:<Teil von data>"
 //
-// Alles wird mit einem einzigen set() geschrieben. Haben zwei PCs gleichzeitig
-// geschrieben und passen die Teile nicht mehr zu `gen`, überschreibt der nächste
-// Sync den Stand mit dem eigenen. Weil jeder PC seine Passkeys lokal behält und
-// beim nächsten Sync wieder zusammenführt, geht dabei nichts verloren.
+// Alles wird mit einem einzigen set() geschrieben. Passen die Teile nicht zu
+// `gen`, sind sie vielleicht noch unterwegs, darum wird erst etwas später noch
+// einmal gelesen. Passen sie dann immer noch nicht, weil zwei PCs gleichzeitig
+// geschrieben haben, überschreibt der Sync den Stand mit dem eigenen. Weil jeder
+// PC seine Passkeys lokal behält und beim nächsten Sync wieder zusammenführt,
+// geht dabei nichts verloren.
 //
 // storage.local enthält:
 //   fxSyncSettings – { enabled, password }
@@ -19,11 +21,14 @@
 const FX_SYNC_KEY = 'passkeySync';
 const FX_CHUNK_SIZE = 8000;
 const FX_SYNC_DELAY_MS = 3000;
+const FX_SYNC_RETRY_MS = 60 * 1000;
 
 let fxSyncRunning = null;
+let fxSyncAgain = false;
 let fxSyncTimer = null;
 let fxSyncApplying = false;
 let fxSyncLastGen = null;
+let fxSyncMixedGen = null;
 
 async function loadFxSyncSettings() {
   const { fxSyncSettings } = await browser.storage.local.get('fxSyncSettings');
@@ -67,7 +72,7 @@ async function disableFxSync() {
 const chunkKey = i => FX_SYNC_KEY + '.' + i;
 
 // Liefert { store, salt }, null wenn noch nichts gespeichert ist, oder
-// { inconsistent: true }, wenn die Teile von verschiedenen Schreibvorgängen stammen
+// { mixed: gen }, wenn die Teile nicht zum Kopf passen
 async function readFxRemote(settings) {
   const all = await browser.storage.sync.get(null);
   const head = all[FX_SYNC_KEY];
@@ -79,7 +84,7 @@ async function readFxRemote(settings) {
   let data = '';
   for (let i = 0; i < head.chunks; i++) {
     const chunk = all[chunkKey(i)];
-    if (typeof chunk !== 'string' || !chunk.startsWith(head.gen + ':')) return { inconsistent: true };
+    if (typeof chunk !== 'string' || !chunk.startsWith(head.gen + ':')) return { mixed: head.gen };
     data += chunk.slice(head.gen.length + 1);
   }
 
@@ -113,8 +118,6 @@ async function writeFxRemote(settings, store, remote) {
   // Der eigene Schreibvorgang löst über storage.onChanged keinen weiteren Sync aus
   fxSyncLastGen = gen;
   try {
-    // Alte Teile zuerst entfernen, damit der Platz für die neuen reicht
-    if (stale.length) await browser.storage.sync.remove(stale);
     await browser.storage.sync.set(items);
   } catch (err) {
     if (/quota/i.test(String(err && (err.name + ' ' + err.message)))) {
@@ -122,11 +125,19 @@ async function writeFxRemote(settings, store, remote) {
     }
     throw err;
   }
+  // Erst nach dem erfolgreichen Schreiben, sonst wäre der alte Stand unlesbar
+  if (stale.length) await browser.storage.sync.remove(stale);
 }
 
 async function runFxSync(settings) {
   const remote = await readFxRemote(settings);
-  const usable = remote && !remote.inconsistent ? remote : null;
+  if (remote && remote.mixed && remote.mixed !== fxSyncMixedGen) {
+    fxSyncMixedGen = remote.mixed;
+    scheduleFxSync(FX_SYNC_RETRY_MS);
+    return;
+  }
+  fxSyncMixedGen = null;
+  const usable = remote && !remote.mixed ? remote : null;
 
   const merged = await withStorageLock(async () => {
     const local = await loadStore();
@@ -145,7 +156,12 @@ async function runFxSync(settings) {
 }
 
 function fxSyncNow() {
-  if (fxSyncRunning) return fxSyncRunning;
+  // Änderungen während eines laufenden Syncs kommen in einem zweiten Durchlauf mit
+  if (fxSyncRunning) {
+    fxSyncAgain = true;
+    return fxSyncRunning;
+  }
+  fxSyncAgain = false;
   fxSyncRunning = (async () => {
     const settings = await loadFxSyncSettings();
     if (!settings || !settings.enabled) return;
@@ -157,7 +173,10 @@ function fxSyncNow() {
       const { fxSyncState } = await browser.storage.local.get('fxSyncState');
       await setFxSyncState({ lastSync: (fxSyncState && fxSyncState.lastSync) || null, lastError: err.message });
     }
-  })().finally(() => { fxSyncRunning = null; });
+  })().finally(() => {
+    fxSyncRunning = null;
+    if (fxSyncAgain) scheduleFxSync(0);
+  });
   return fxSyncRunning;
 }
 
@@ -173,8 +192,13 @@ function onPasskeysChangedFx() {
 
 // Firefox hat Daten von einem anderen PC geholt
 browser.storage.onChanged.addListener((changes, area) => {
-  const head = area === 'sync' && changes[FX_SYNC_KEY];
-  if (head && !(head.newValue && head.newValue.gen === fxSyncLastGen)) scheduleFxSync();
+  if (area !== 'sync') return;
+  const foreign = Object.entries(changes).some(([key, { newValue }]) => {
+    if (key === FX_SYNC_KEY) return !(newValue && newValue.gen === fxSyncLastGen);
+    if (!key.startsWith(FX_SYNC_KEY + '.')) return false;
+    return typeof newValue === 'string' && !newValue.startsWith(fxSyncLastGen + ':');
+  });
+  if (foreign) scheduleFxSync();
 });
 
 scheduleFxSync(0);
