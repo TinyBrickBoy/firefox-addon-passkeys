@@ -162,12 +162,36 @@
     "description": "Title of the backup and sync page."
   },
   "backupSubtitle": {
-    "message": "Synchronisiere deine Passkeys über Nextcloud oder sichere sie in einer verschlüsselten Datei.",
+    "message": "Synchronisiere deine Passkeys über Firefox Sync oder Nextcloud oder sichere sie in einer verschlüsselten Datei.",
     "description": "Subtitle of the backup page."
   },
   "backupWarning": {
     "message": "Backup und Sync Datei enthalten deine privaten Schlüssel. Wer die Datei und das Passwort hat, kann sich mit deinen Passkeys anmelden. Bewahre beides sicher und getrennt auf.",
     "description": "Warning about what a backup or sync file contains."
+  },
+  "fxSyncTitle": {
+    "message": "Firefox Sync",
+    "description": "Heading of the Firefox Sync section."
+  },
+  "fxSyncHint": {
+    "message": "Synchronisiert deine Passkeys verschlüsselt über dein Firefox-Konto. Melde dich auf jedem PC bei Firefox Sync an und aktiviere dort in den Einstellungen „Add-ons“. Platz für etwa 80 Passkeys.",
+    "description": "Explains how Firefox Sync works and what to turn on."
+  },
+  "fxSyncPasswordHint": {
+    "message": "Verschlüsselt die Passkeys in Firefox Sync. Muss auf jedem PC gleich sein, mindestens 8 Zeichen.",
+    "description": "Explains the Firefox Sync encryption password."
+  },
+  "fxSyncErrorWrongPassword": {
+    "message": "Das Sync-Passwort passt nicht zu den Passkeys in Firefox Sync.",
+    "description": "Error when the passkeys in Firefox Sync cannot be decrypted."
+  },
+  "fxSyncErrorRemoteInvalid": {
+    "message": "Die Passkeys in Firefox Sync sind beschädigt.",
+    "description": "Error when the data in Firefox Sync is damaged."
+  },
+  "fxSyncErrorQuota": {
+    "message": "Zu viele Passkeys für Firefox Sync. Nutze stattdessen den Nextcloud-Sync oder eine Backup-Datei.",
+    "description": "Error when the passkeys do not fit into the Firefox Sync storage limit."
   },
   "syncTitle": {
     "message": "Nextcloud Sync",
