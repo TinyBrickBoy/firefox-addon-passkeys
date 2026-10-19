@@ -118,6 +118,7 @@ function fmtTime(iso) {
   return new Date(iso).toLocaleString(browser.i18n.getUILanguage(), { dateStyle: 'short', timeStyle: 'short' });
 }
 
+/** Zeigt die aktuellen Nextcloud-Sync-Einstellungen im Formular an. */
 function renderSync(settings) {
   const enabled = settings.enabled;
   $('sync-server').value = settings.serverUrl;
@@ -134,6 +135,7 @@ function renderSync(settings) {
   renderSyncState($('sync-state'), settings);
 }
 
+/** Aktualisiert die Statusanzeige (stateEl) anhand von settings.state. */
 function renderSyncState(stateEl, settings) {
   const enabled = settings.enabled;
   const state = settings.state || {};
@@ -152,6 +154,7 @@ function renderSyncState(stateEl, settings) {
   }
 }
 
+/** Führt eine Sync-Aktion aus, zeigt den Status an und rendert das Ergebnis. */
 async function syncAction(button, message, status = $('sync-status'), render = renderSync) {
   button.disabled = true;
   setStatus(status, t('syncRunning'));
@@ -188,6 +191,7 @@ browser.runtime.sendMessage({ action: 'sync-get-settings' }).then(renderSync);
 
 // ─── Firefox Sync ─────────────────────────────────────────────────────────────
 
+/** Zeigt die aktuellen Firefox-Sync-Einstellungen im Formular an. */
 function renderFxSync(settings) {
   const enabled = settings.enabled;
   $('fxsync-password').value = '';
@@ -198,6 +202,7 @@ function renderFxSync(settings) {
   renderSyncState($('fxsync-state'), settings);
 }
 
+/** syncAction mit den Feldern/dem Renderer der Firefox-Sync-Sektion. */
 const fxSyncAction = (button, message) => syncAction(button, message, $('fxsync-status'), renderFxSync);
 
 $('fxsync-form').addEventListener('submit', (e) => {
