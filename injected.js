@@ -75,6 +75,7 @@
     if (raw.type === 'create') {
       const attestationObject = toBuffer(raw.response.attestationObject);
       const authenticatorData = toBuffer(raw.response.authenticatorData);
+      const publicKey = raw.response.publicKey ? toBuffer(raw.response.publicKey) : null;
 
       try {
         response = Object.create(AuthenticatorAttestationResponse.prototype);
@@ -82,7 +83,7 @@
           clientDataJSON: makeProp(clientDataJSON),
           attestationObject: makeProp(attestationObject),
           getAuthenticatorData: makeProp(() => authenticatorData),
-          getPublicKey: makeProp(() => null),
+          getPublicKey: makeProp(() => publicKey),
           getPublicKeyAlgorithm: makeProp(() => -7),
           getTransports: makeProp(() => ['internal']),
         });
@@ -90,7 +91,7 @@
         response = {
           clientDataJSON, attestationObject,
           getAuthenticatorData: () => authenticatorData,
-          getPublicKey: () => null, getPublicKeyAlgorithm: () => -7,
+          getPublicKey: () => publicKey, getPublicKeyAlgorithm: () => -7,
           getTransports: () => ['internal'],
         };
       }
