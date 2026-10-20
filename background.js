@@ -523,6 +523,30 @@ function mergeStores(local, remote) {
   };
 }
 
+// Bringt Passkeys aus älteren Versionen (ab 1.0.0) auf den aktuellen Stand.
+// 1.0.0 kannte noch kein `modified`; ohne gültigen Zähler würden Sync und
+// Import einen Passkey als ungültig verwerfen. Läuft bei jedem Start und
+// ändert nur, was fehlt.
+function migrateStore() {
+  return withStorageLock(async () => {
+    const store = await loadStore();
+    let changed = false;
+    store.passkeys = store.passkeys.map(pk => {
+      const fixed = { ...pk };
+      if (!Number.isInteger(fixed.counter) || fixed.counter < 0) {
+        fixed.counter = Math.max(0, parseInt(fixed.counter, 10) || 0);
+      }
+      // Nicht "jetzt", sonst wäre ein alter Passkey neuer als sein Löschen auf einem anderen PC
+      if (!fixed.modified && fixed.created) fixed.modified = fixed.created;
+      if (JSON.stringify(fixed) !== JSON.stringify(pk)) changed = true;
+      return fixed;
+    });
+    if (changed) await saveStore(store);
+  });
+}
+
+migrateStore().catch(err => console.error('[Passkey] Migration FEHLER', err));
+
 // Import aus einer Backup-Datei. Importierte Passkeys gelten als gerade
 // geändert, damit sie auch einen früher gelöschten Stand wiederherstellen.
 function importPasskeys(imported) {
