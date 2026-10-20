@@ -16,6 +16,8 @@ A Firefox add-on that creates and stores passkeys (WebAuthn) locally, for system
 
 The add-on replaces `navigator.credentials.create()` and `navigator.credentials.get()` on websites. When a site asks for a passkey, the add-on creates a key pair or signs the request in its background script and returns a regular `PublicKeyCredential` to the site. When you sign in on a site without a stored passkey, the browser's own flow is used.
 
+The add-on identifies itself to websites with the AAGUID `e3379e58-a9a8-4cd7-a6f5-e754a22fe799`.
+
 ## Sync and backup
 
 Open the add-on popup and choose **Backup & sync**.

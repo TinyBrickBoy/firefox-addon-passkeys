@@ -162,6 +162,11 @@ function rawEcdsaToDer(raw) {
 
 // ─── Authenticator Data aufbauen ─────────────────────────────────────────────
 
+// Kennung dieses Authenticators. Manche Server lehnen eine AAGUID aus lauter
+// Nullen ab, darum hat das Addon eine eigene, feste AAGUID.
+const AAGUID = 'e3379e58-a9a8-4cd7-a6f5-e754a22fe799';
+const AAGUID_BYTES = new Uint8Array(AAGUID.replace(/-/g, '').match(/../g).map(h => parseInt(h, 16)));
+
 async function buildAuthData(rpId, flags, counter, credentialId, publicKeyRaw) {
   const rpIdHash = await sha256(new TextEncoder().encode(rpId));
 
@@ -185,13 +190,11 @@ async function buildAuthData(rpId, flags, counter, credentialId, publicKeyRaw) {
     const credIdLen = new Uint8Array(2);
     new DataView(credIdLen.buffer).setUint16(0, credentialId.length, false);
 
-    const aaguid = new Uint8Array(16); // alle Nullen
-
     const authData = new Uint8Array([
       ...rpIdHash,
       flags,
       ...counterBytes,
-      ...aaguid,
+      ...AAGUID_BYTES,
       ...credIdLen,
       ...credentialId,
       ...coseKey,
