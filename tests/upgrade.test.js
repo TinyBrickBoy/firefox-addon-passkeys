@@ -24,6 +24,8 @@ const git = (...args) => execFileSync('git', args, { cwd: ROOT, encoding: 'utf8'
 
 function versions() {
   const tags = git('tag', '-l').split('\n').filter(tag => /^v?\d+\.\d+\.\d+$/.test(tag));
+  // Ohne Tags würde der Test nur 1.0.0 prüfen und trotzdem bestehen
+  if (tags.length === 0) throw new Error('Keine Versions-Tags gefunden, erst "git fetch --tags" ausführen');
   return [...UNTAGGED, ...tags];
 }
 
