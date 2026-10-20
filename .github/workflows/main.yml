@@ -11,7 +11,7 @@ on:
     branches: [main]
 
 env:
-  WEB_EXT_IGNORE: --ignore-files ".github/**" "generate-icons.js" "dist/**"
+  WEB_EXT_IGNORE: --ignore-files ".github/**" "generate-icons.js" "dist/**" "tests/**"
 
 jobs:
   # ─── Lint & Validate ────────────────────────────────────────────────────────
@@ -31,11 +31,31 @@ jobs:
       - name: Addon validieren
         run: web-ext lint --source-dir . ${{ env.WEB_EXT_IGNORE }}
 
+  # ─── Upgrade-Test ───────────────────────────────────────────────────────────
+  # Jede veröffentlichte Version muss sich auf den aktuellen Stand aktualisieren
+  # lassen, ohne dass Passkeys verloren gehen.
+  upgrade:
+    name: Upgrade test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Der Test lädt die alten Versionen aus der Git-Historie und den Tags
+          fetch-depth: 0
+          fetch-tags: true
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Upgrade von allen Versionen testen
+        run: node tests/upgrade.test.js
+
   # ─── Build & Artifact ───────────────────────────────────────────────────────
   build:
     name: Build
     runs-on: ubuntu-latest
-    needs: lint
+    needs: [lint, upgrade]
     steps:
       - uses: actions/checkout@v4
 
