@@ -35,7 +35,13 @@ Load the add-on temporarily: open `about:debugging#/runtime/this-firefox`, choos
 Lint it like the CI does:
 
 ```sh
-npx web-ext lint --source-dir . --ignore-files ".github/**" "generate-icons.js" "dist/**"
+npx web-ext lint --source-dir . --ignore-files ".github/**" "generate-icons.js" "dist/**" "tests/**"
+```
+
+Check that every released version still upgrades to the current code without losing passkeys (needs the Git tags):
+
+```sh
+node tests/upgrade.test.js
 ```
 
 ## License
