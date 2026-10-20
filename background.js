@@ -234,6 +234,10 @@ async function handleCreate(options, origin, hostname) {
   const publicKeyRaw = new Uint8Array(
     await crypto.subtle.exportKey('raw', keyPair.publicKey)
   );
+  // Für getPublicKey() der Seite: DER-kodierter SubjectPublicKeyInfo
+  const publicKeySpki = new Uint8Array(
+    await crypto.subtle.exportKey('spki', keyPair.publicKey)
+  );
   const privateKeyJwk = await crypto.subtle.exportKey('jwk', keyPair.privateKey);
 
   // clientDataJSON
@@ -282,6 +286,7 @@ async function handleCreate(options, origin, hostname) {
       clientDataJSON: Array.from(clientDataJSON),
       attestationObject: Array.from(attObj),
       authenticatorData: Array.from(authData),
+      publicKey: Array.from(publicKeySpki),
     },
   };
 }
