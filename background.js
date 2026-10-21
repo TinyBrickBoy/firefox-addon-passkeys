@@ -222,7 +222,9 @@ async function handleCreate(options, origin, hostname) {
 
   // Gibt es für diese Seite schon einen der ausgeschlossenen Passkeys, wird kein
   // zweiter angelegt. Die Seite zeigt dann, dass der Passkey schon existiert.
+  // Einträge mit unbekanntem Typ ignoriert WebAuthn
   const excluded = (opts.excludeCredentials || [])
+    .filter(c => c && (!c.type || c.type === 'public-key'))
     .map(c => deserializeBuffer(c.id))
     .filter(Boolean)
     .map(id => base64urlEncode(Array.from(id)));
