@@ -219,6 +219,22 @@ async function handleCreate(options, origin, hostname) {
       'SecurityError'
     );
   }
+
+  // Gibt es für diese Seite schon einen der ausgeschlossenen Passkeys, wird kein
+  // zweiter angelegt. Die Seite zeigt dann, dass der Passkey schon existiert.
+  // Einträge mit unbekanntem Typ ignoriert WebAuthn
+  const excluded = (opts.excludeCredentials || [])
+    .filter(c => c && (!c.type || c.type === 'public-key'))
+    .map(c => deserializeBuffer(c.id))
+    .filter(Boolean)
+    .map(id => base64urlEncode(Array.from(id)));
+  if (excluded.length > 0) {
+    const passkeys = await loadPasskeys();
+    if (passkeys.some(pk => pk.rpId === rpId && excluded.includes(pk.credentialId))) {
+      throw new DOMException(t('errorPasskeyExists', rpId), 'InvalidStateError');
+    }
+  }
+
   const rpName = (opts.rp && opts.rp.name) ? opts.rp.name : rpId;
   const userId = opts.user ? deserializeBuffer(opts.user.id) : randomBytes(16);
   const userName = opts.user ? opts.user.name : '';
