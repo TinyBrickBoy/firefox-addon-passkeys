@@ -144,6 +144,13 @@
       "stored": { "content": "$2", "example": "example.org, example.net" }
     }
   },
+  "errorPasskeyExists": {
+    "message": "A passkey for “$RPID$” already exists in this browser.",
+    "description": "Error when the site already has a passkey from this browser and asks for another one.",
+    "placeholders": {
+      "rpid": { "content": "$1", "example": "github.com" }
+    }
+  },
   "errorNoAllowedPasskey": {
     "message": "None of the allowed passkeys were found",
     "description": "Error when no stored passkey is in allowCredentials."
